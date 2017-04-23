@@ -76,7 +76,8 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
     public File getResolutionCacheRoot() {
         if (basedir == null) {
             if (settings == null) {
-                throw new IllegalStateException("The 'basedir' or 'IvySettings' has not been set on the ResolutionCacheManager");
+                throw new IllegalStateException(
+                        "The 'basedir' or 'IvySettings' has not been set on the ResolutionCacheManager");
             }
             basedir = settings.getDefaultResolutionCacheBasedir();
         }
@@ -150,15 +151,19 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
 
         Properties paths = new Properties();
 
-        File parentsFile = getResolvedIvyPropertiesInCache(ModuleRevisionId.newInstance(mrid,
-            mrid.getRevision() + "-parents"));
+        File parentsFile = getResolvedIvyPropertiesInCache(
+            ModuleRevisionId.newInstance(mrid, mrid.getRevision() + "-parents"));
         if (parentsFile.exists()) {
             FileInputStream in = new FileInputStream(parentsFile);
             paths.load(in);
             in.close();
         }
 
-        ParserSettings pSettings = new CacheParserSettings(settings, paths);
+        @SuppressWarnings("rawtypes")
+        Map m = paths;
+
+        @SuppressWarnings("unchecked")
+        ParserSettings pSettings = new CacheParserSettings(settings, m);
 
         URL ivyFileURL = ivyFile.toURI().toURL();
         return getModuleDescriptorParser(ivyFile).parseDescriptor(pSettings, ivyFileURL, false);
@@ -175,8 +180,8 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
         return XmlModuleDescriptorParser.getInstance();
     }
 
-    public void saveResolvedModuleDescriptor(ModuleDescriptor md) throws ParseException,
-            IOException {
+    public void saveResolvedModuleDescriptor(ModuleDescriptor md)
+            throws ParseException, IOException {
         ModuleRevisionId mrevId = md.getResolvedModuleRevisionId();
         File ivyFileInCache = getResolvedIvyFileInCache(mrevId);
         md.toIvyFile(ivyFileInCache);
@@ -185,8 +190,8 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
         saveLocalParents(mrevId, md, ivyFileInCache, paths);
 
         if (!paths.isEmpty()) {
-            File parentsFile = getResolvedIvyPropertiesInCache(ModuleRevisionId.newInstance(mrevId,
-                mrevId.getRevision() + "-parents"));
+            File parentsFile = getResolvedIvyPropertiesInCache(
+                ModuleRevisionId.newInstance(mrevId, mrevId.getRevision() + "-parents"));
             FileOutputStream out = new FileOutputStream(parentsFile);
             paths.store(out, null);
             out.close();
@@ -196,19 +201,19 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
     private void saveLocalParents(ModuleRevisionId baseMrevId, ModuleDescriptor md, File mdFile,
             Properties paths) throws ParseException, IOException {
         ExtendsDescriptor[] parents = md.getInheritedDescriptors();
-        for (int i = 0; i < parents.length; i++) {
-            if (!parents[i].isLocal()) {
+        for (ExtendsDescriptor ed : parents) {
+            if (!ed.isLocal()) {
                 // we store only local parents in the cache!
                 continue;
             }
 
-            ModuleDescriptor parent = parents[i].getParentMd();
+            ModuleDescriptor parent = ed.getParentMd();
             ModuleRevisionId pRevId = ModuleRevisionId.newInstance(baseMrevId,
                 baseMrevId.getRevision() + "-parent." + paths.size());
             File parentFile = getResolvedIvyFileInCache(pRevId);
             parent.toIvyFile(parentFile);
 
-            paths.setProperty(mdFile.getName() + "|" + parents[i].getLocation(),
+            paths.setProperty(mdFile.getName() + "|" + ed.getLocation(),
                 parentFile.getAbsolutePath());
             saveLocalParents(baseMrevId, parent, parentFile, paths);
         }
@@ -226,9 +231,9 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
 
         private ParserSettings delegate;
 
-        private Map parentPaths;
+        private Map<String, String> parentPaths;
 
-        public CacheParserSettings(ParserSettings delegate, Map parentPaths) {
+        public CacheParserSettings(ParserSettings delegate, Map<String, String> parentPaths) {
             this.delegate = delegate;
             this.parentPaths = parentPaths;
         }
@@ -237,7 +242,7 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
             return delegate.substitute(value);
         }
 
-        public Map substitute(Map strings) {
+        public Map<String, String> substitute(Map<String, String> strings) {
             return delegate.substitute(strings);
         }
 
@@ -288,11 +293,11 @@ public class DefaultResolutionCacheManager implements ResolutionCacheManager, Iv
 
     private static class MapURLResolver extends RelativeUrlResolver {
 
-        private Map paths;
+        private Map<String, String> paths;
 
         private RelativeUrlResolver delegate;
 
-        private MapURLResolver(Map paths, RelativeUrlResolver delegate) {
+        private MapURLResolver(Map<String, String> paths, RelativeUrlResolver delegate) {
             this.paths = paths;
             this.delegate = delegate;
         }

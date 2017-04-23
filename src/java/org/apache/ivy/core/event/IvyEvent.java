@@ -17,6 +17,7 @@
  */
 package org.apache.ivy.core.event;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,7 +43,7 @@ public class IvyEvent {
 
     private String name;
 
-    private Map attributes = new HashMap();
+    private Map<String, String> attributes = new HashMap<String, String>();
 
     protected IvyEvent(String name) {
         this.source = IvyContext.getContext().getEventManager();
@@ -80,7 +81,7 @@ public class IvyEvent {
         addAttribute("conf", StringUtils.join(confs, ", "));
     }
 
-    protected void addAttributes(Map attributes) {
+    protected void addAttributes(Map<String, String> attributes) {
         this.attributes.putAll(attributes);
     }
 
@@ -97,8 +98,8 @@ public class IvyEvent {
      * 
      * @return the attributes of this event, as a Map(String->String)
      */
-    public Map getAttributes() {
-        return new HashMap(attributes);
+    public Map<String, String> getAttributes() {
+        return Collections.unmodifiableMap(attributes);
     }
 
     public String toString() {

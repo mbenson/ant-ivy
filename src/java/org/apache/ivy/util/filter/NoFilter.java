@@ -17,12 +17,13 @@
  */
 package org.apache.ivy.util.filter;
 
-public final class NoFilter implements Filter {
+public final class NoFilter implements Filter<Object> {
 
-    public static final Filter INSTANCE = new NoFilter();
+    public static final Filter<?> INSTANCE = new NoFilter();
 
+    @SuppressWarnings("unchecked")
     public static <T> Filter<T> instance() {
-        return INSTANCE;
+        return (Filter<T>) INSTANCE;
     }
 
     private NoFilter() {

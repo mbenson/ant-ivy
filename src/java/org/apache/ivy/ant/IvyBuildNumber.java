@@ -57,7 +57,6 @@ public class IvyBuildNumber extends IvyTask {
         public long getLastModified() {
             return -1;
         }
-
     }
 
     private String organisation;
@@ -170,9 +169,8 @@ public class IvyBuildNumber extends IvyTask {
                 if (expression.equals(organisation) || expression.equals(module)
                         || expression.equals(branch)) {
                     return exact.getMatcher(expression);
-                } else {
-                    return regexp.getMatcher(expression);
                 }
+                return regexp.getMatcher(expression);
             }
 
             public String getName() {
@@ -205,13 +203,14 @@ public class IvyBuildNumber extends IvyTask {
 
         VersionMatcher matcher = settings.getVersionMatcher();
         LatestStrategy latestStrategy = settings.getLatestStrategy("latest-revision");
-        List sorted = latestStrategy.sort(infos);
+        List<ArtifactInfo> sorted = latestStrategy.sort(infos);
 
         ModuleRevisionId askedMrid = ModuleRevisionId.newInstance(organisation, module, branch,
             revision);
 
         String foundRevision = null;
-        for (ListIterator iter = sorted.listIterator(sorted.size()); iter.hasPrevious();) {
+        for (ListIterator<ArtifactInfo> iter = sorted.listIterator(sorted.size()); iter
+                .hasPrevious();) {
             ResolvedModuleRevisionArtifactInfo info = (ResolvedModuleRevisionArtifactInfo) iter
                     .previous();
 
@@ -247,40 +246,37 @@ public class IvyBuildNumber extends IvyTask {
     }
 
     private NewRevision computeNewRevision(String revision) {
-        String revPrefix = "latest.integration".equals(this.revision) ? "" : this.revision
-                .substring(0, this.revision.length() - 1);
+        String revPrefix = "latest.integration".equals(this.revision) ? ""
+                : this.revision.substring(0, this.revision.length() - 1);
         if (revision != null && !revision.startsWith(revPrefix)) {
             throw new BuildException("invalid exception found in repository: '" + revision
                     + "' for '" + revPrefix + "'");
         }
         if (revision == null) {
             if (revPrefix.length() > 0) {
-                return new NewRevision(revision, revPrefix
-                        + (revPrefix.endsWith(revSep) ? defaultBuildNumber : revSep
-                                + defaultBuildNumber), null, defaultBuildNumber);
-            } else {
-                Range r = findLastNumber(defaultValue);
-                if (r == null) { // no number found
-                    return new NewRevision(revision, defaultValue, null, null);
-                } else {
-                    long n = Long.parseLong(defaultValue.substring(r.getStartIndex(),
-                        r.getEndIndex()));
-                    return new NewRevision(revision, defaultValue, null, String.valueOf(n));
-                }
+                return new NewRevision(revision, revPrefix + (revPrefix.endsWith(revSep)
+                        ? defaultBuildNumber : revSep + defaultBuildNumber), null,
+                        defaultBuildNumber);
             }
+            Range r = findLastNumber(defaultValue);
+            if (r == null) { // no number found
+                return new NewRevision(revision, defaultValue, null, null);
+            }
+            long n = Long.parseLong(defaultValue.substring(r.getStartIndex(), r.getEndIndex()));
+            return new NewRevision(revision, defaultValue, null, String.valueOf(n));
         }
         Range r;
         if (revPrefix.length() == 0) {
             r = findLastNumber(revision);
             if (r == null) {
-                return new NewRevision(revision, revision
-                        + (revision.endsWith(revSep) ? "1" : revSep + "1"), null, "1");
+                return new NewRevision(revision,
+                        revision + (revision.endsWith(revSep) ? "1" : revSep + "1"), null, "1");
             }
         } else {
             r = findFirstNumber(revision, revPrefix.length());
             if (r == null) {
-                return new NewRevision(revision, revPrefix
-                        + (revPrefix.endsWith(revSep) ? "1" : revSep + "1"), null, "1");
+                return new NewRevision(revision,
+                        revPrefix + (revPrefix.endsWith(revSep) ? "1" : revSep + "1"), null, "1");
             }
         }
         long n = Long.parseLong(revision.substring(r.getStartIndex(), r.getEndIndex())) + 1;
@@ -291,7 +287,8 @@ public class IvyBuildNumber extends IvyTask {
     private Range findFirstNumber(String str, int startIndex) {
         // let's find the first digit in the string
         int startNumberIndex = startIndex;
-        while (startNumberIndex < str.length() && !Character.isDigit(str.charAt(startNumberIndex))) {
+        while (startNumberIndex < str.length()
+                && !Character.isDigit(str.charAt(startNumberIndex))) {
             startNumberIndex++;
         }
         if (startNumberIndex == str.length()) {
@@ -318,9 +315,8 @@ public class IvyBuildNumber extends IvyTask {
         startNumberIndex++;
         if (startNumberIndex == endNumberIndex) { // no number found
             return null;
-        } else {
-            return new Range(startNumberIndex, endNumberIndex);
         }
+        return new Range(startNumberIndex, endNumberIndex);
     }
 
     private static class Range {

@@ -37,7 +37,7 @@ class ModuleDescriptorMemoryCache {
 
     private final int maxSize;
 
-    private final LinkedHashMap/* <File,CacheEntry> */valueMap;
+    private final LinkedHashMap<File, CacheEntry> valueMap;
 
     /**
      * Create a cache of the given size
@@ -46,7 +46,7 @@ class ModuleDescriptorMemoryCache {
      */
     public ModuleDescriptorMemoryCache(int size) {
         this.maxSize = size;
-        this.valueMap = new LinkedHashMap(size);
+        this.valueMap = new LinkedHashMap<File, CacheEntry>(size);
     }
 
     public ModuleDescriptor get(File ivyFile, ParserSettings ivySettings, boolean validated,
@@ -65,8 +65,8 @@ class ModuleDescriptorMemoryCache {
     public ModuleDescriptor getStale(File ivyFile, ParserSettings ivySettings, boolean validated,
             ModuleDescriptorProvider mdProvider) throws ParseException, IOException {
         ParserSettingsMonitor settingsMonitor = new ParserSettingsMonitor(ivySettings);
-        ModuleDescriptor descriptor = mdProvider.provideModule(
-            settingsMonitor.getMonitoredSettings(), ivyFile, validated);
+        ModuleDescriptor descriptor = mdProvider
+                .provideModule(settingsMonitor.getMonitoredSettings(), ivyFile, validated);
         putInCache(ivyFile, settingsMonitor, validated, descriptor);
         return descriptor;
     }
@@ -76,24 +76,22 @@ class ModuleDescriptorMemoryCache {
             // cache is disbaled
             return null;
         }
-        CacheEntry entry = (CacheEntry) valueMap.get(ivyFile);
-        if (entry != null) {
-            if (entry.isStale(validated, ivySettings)) {
-                Message.debug("Entry is found in the ModuleDescriptorCache but entry should be "
-                        + "reevaluated : " + ivyFile);
-                valueMap.remove(ivyFile);
-                return null;
-            } else {
-                // Move the entry at the end of the list
-                valueMap.remove(ivyFile);
-                valueMap.put(ivyFile, entry);
-                Message.debug("Entry is found in the ModuleDescriptorCache : " + ivyFile);
-                return entry.md;
-            }
-        } else {
+        CacheEntry entry = valueMap.get(ivyFile);
+        if (entry == null) {
             Message.debug("No entry is found in the ModuleDescriptorCache : " + ivyFile);
             return null;
         }
+        if (entry.isStale(validated, ivySettings)) {
+            Message.debug("Entry is found in the ModuleDescriptorCache but entry should be "
+                    + "reevaluated : " + ivyFile);
+            valueMap.remove(ivyFile);
+            return null;
+        }
+        // Move the entry at the end of the list
+        valueMap.remove(ivyFile);
+        valueMap.put(ivyFile, entry);
+        Message.debug("Entry is found in the ModuleDescriptorCache : " + ivyFile);
+        return entry.md;
     }
 
     void putInCache(File url, ParserSettingsMonitor ivySettingsMonitor, boolean validated,
@@ -104,7 +102,7 @@ class ModuleDescriptorMemoryCache {
         }
         if (valueMap.size() >= maxSize) {
             Message.debug("ModuleDescriptorCache is full, remove one entry");
-            Iterator it = valueMap.values().iterator();
+            Iterator<CacheEntry> it = valueMap.values().iterator();
             it.next();
             it.remove();
         }

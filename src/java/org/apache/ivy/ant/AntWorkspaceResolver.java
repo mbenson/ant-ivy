@@ -25,10 +25,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.ivy.core.module.descriptor.Artifact;
 import org.apache.ivy.core.module.descriptor.DefaultArtifact;
@@ -45,8 +43,9 @@ import org.apache.ivy.plugins.resolver.AbstractWorkspaceResolver;
 import org.apache.ivy.util.Message;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.DataType;
+import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.ResourceCollection;
-import org.apache.tools.ant.types.resources.FileResource;
+import org.apache.tools.ant.types.resources.FileProvider;
 
 public class AntWorkspaceResolver extends DataType {
 
@@ -131,8 +130,8 @@ public class AntWorkspaceResolver extends DataType {
             if (md2IvyFile == null) {
                 md2IvyFile = new HashMap<ModuleDescriptor, File>();
                 for (ResourceCollection resources : allResources) {
-                    for (Iterator it = resources.iterator(); it.hasNext();) {
-                        File ivyFile = ((FileResource) it.next()).getFile();
+                    for (Resource resource : resources) {
+                        File ivyFile = resource.as(FileProvider.class).getFile();
                         try {
                             ModuleDescriptor md = ModuleDescriptorParserRegistry.getInstance()
                                     .parseDescriptor(getParserSettings(), ivyFile.toURI().toURL(),
@@ -143,10 +142,9 @@ public class AntWorkspaceResolver extends DataType {
                             if (haltOnError) {
                                 throw new BuildException("impossible to parse ivy file " + ivyFile
                                         + " exception=" + ex, ex);
-                            } else {
-                                Message.warn("impossible to parse ivy file " + ivyFile
-                                        + " exception=" + ex.getMessage());
                             }
+                            Message.warn("impossible to parse ivy file " + ivyFile + " exception="
+                                    + ex.getMessage());
                         }
                     }
                 }
@@ -157,7 +155,7 @@ public class AntWorkspaceResolver extends DataType {
         public ResolvedModuleRevision getDependency(DependencyDescriptor dd, ResolveData data)
                 throws ParseException {
             Map<ModuleDescriptor, File> mds = getModuleDescriptors();
-            for (Entry<ModuleDescriptor, File> md : mds.entrySet()) {
+            for (Map.Entry<ModuleDescriptor, File> md : mds.entrySet()) {
                 ResolvedModuleRevision rmr = checkCandidate(dd, md.getKey(),
                     getProjectName(md.getValue()));
                 if (rmr != null) {
@@ -190,29 +188,27 @@ public class AntWorkspaceResolver extends DataType {
                             + File.separator + name + "." + ext;
                 }
 
-                URL url;
                 File ivyFile = md2IvyFile.get(md);
                 File artifactFile = new File(ivyFile.getParentFile(), path);
+                URL url;
                 try {
                     url = artifactFile.toURI().toURL();
                 } catch (MalformedURLException e) {
                     throw new RuntimeException("Unsupported file path : " + artifactFile, e);
                 }
-
                 res.add(new DefaultArtifact(md.getModuleRevisionId(), new Date(), name, type, ext,
                         url, null));
             }
-
             return res;
         }
 
         public DownloadReport download(Artifact[] artifacts, DownloadOptions options) {
             // Not much to do here - downloads are not required for workspace projects.
             DownloadReport dr = new DownloadReport();
-            for (int i = 0; i < artifacts.length; i++) {
-                ArtifactDownloadReport adr = new ArtifactDownloadReport(artifacts[i]);
+            for (Artifact artifact : artifacts) {
+                ArtifactDownloadReport adr = new ArtifactDownloadReport(artifact);
                 dr.addArtifactReport(adr);
-                URL url = artifacts[i].getUrl();
+                URL url = artifact.getUrl();
                 if (url == null || !url.getProtocol().equals("file")) {
                     // this is not an artifact managed by this resolver
                     adr.setDownloadStatus(DownloadStatus.FAILED);
@@ -227,7 +223,7 @@ public class AntWorkspaceResolver extends DataType {
                 adr.setLocalFile(f);
                 adr.setDownloadStatus(DownloadStatus.NO);
                 adr.setSize(0);
-                Message.verbose("\t[IN WORKSPACE] " + artifacts[i]);
+                Message.verbose("\t[IN WORKSPACE] " + artifact);
             }
             return dr;
         }

@@ -41,13 +41,13 @@ import org.apache.ivy.util.MessageLogger;
  */
 public class IvyContext {
 
-    private static ThreadLocal/* <Stack<IvyContext>> */current = new ThreadLocal();
+    private static ThreadLocal<Stack<IvyContext>> current = new ThreadLocal<Stack<IvyContext>>();
 
     private Ivy defaultIvy;
 
-    private WeakReference/* <Ivy> */ivy = new WeakReference(null);
+    private WeakReference<Ivy> ivy = new WeakReference<Ivy>(null);
 
-    private Map contextMap = new HashMap();
+    private Map<String, Object> contextMap = new HashMap<String, Object>();
 
     private Thread operatingThread;
 
@@ -61,24 +61,24 @@ public class IvyContext {
     public IvyContext(IvyContext ctx) {
         defaultIvy = ctx.defaultIvy;
         ivy = ctx.ivy;
-        contextMap = new HashMap(ctx.contextMap);
+        contextMap = new HashMap<String, Object>(ctx.contextMap);
         operatingThread = ctx.operatingThread;
         resolveData = ctx.resolveData;
         dd = ctx.dd;
     }
 
     public static IvyContext getContext() {
-        Stack cur = getCurrentStack();
+        Stack<IvyContext> cur = getCurrentStack();
         if (cur.isEmpty()) {
             cur.push(new IvyContext());
         }
         return (IvyContext) cur.peek();
     }
 
-    private static Stack/* <IvyContext> */getCurrentStack() {
-        Stack cur = (Stack) current.get();
+    private static Stack<IvyContext> getCurrentStack() {
+        Stack<IvyContext> cur = current.get();
         if (cur == null) {
-            cur = new Stack();
+            cur = new Stack<IvyContext>();
             current.set(cur);
         }
         return cur;
@@ -133,7 +133,7 @@ public class IvyContext {
      * @return the popped context
      */
     public static IvyContext popContext() {
-        return (IvyContext) getCurrentStack().pop();
+        return getCurrentStack().pop();
     }
 
     /**
@@ -145,20 +145,25 @@ public class IvyContext {
      * context stack and not only one instance.
      * </p>
      * 
+     * @param <T>
+     *            inferred type
      * @param key
      *            context key for the string
      * @return top object from the list (index 0) of the first context in the stack containing this
      *         key or null if no key or list empty in all contexts from the context stack
      * @see #peek(String)
      */
-    public static Object peekInContextStack(String key) {
-        Object value = null;
-        Stack contextStack = getCurrentStack();
-        for (int i = contextStack.size() - 1; i >= 0 && value == null; i--) {
+    public static <T> T peekInContextStack(String key) {
+        Stack<IvyContext> contextStack = getCurrentStack();
+        for (int i = contextStack.size() - 1; i >= 0; i--) {
             IvyContext ctx = (IvyContext) contextStack.get(i);
-            value = ctx.peek(key);
+            @SuppressWarnings("unchecked")
+            T t = (T) ctx.peek(key);
+            if (t != null) {
+                return t;
+            }
         }
-        return value;
+        return null;
     }
 
     /**
@@ -191,8 +196,7 @@ public class IvyContext {
      * @return the current ivy instance, or <code>null</code> if there is no current ivy instance.
      */
     public Ivy peekIvy() {
-        Ivy ivy = (Ivy) this.ivy.get();
-        return ivy;
+        return this.ivy.get();
     }
 
     private Ivy getDefaultIvy() {
@@ -209,7 +213,7 @@ public class IvyContext {
     }
 
     public void setIvy(Ivy ivy) {
-        this.ivy = new WeakReference(ivy);
+        this.ivy = new WeakReference<Ivy>(ivy);
         operatingThread = Thread.currentThread();
     }
 
@@ -221,38 +225,41 @@ public class IvyContext {
         return getSettings().getCircularDependencyStrategy();
     }
 
-    public Object get(String key) {
-        WeakReference ref = (WeakReference) contextMap.get(key);
+    public <T> T get(String key) {
+        @SuppressWarnings("unchecked")
+        WeakReference<? extends T> ref = (WeakReference<? extends T>) contextMap.get(key);
         return ref == null ? null : ref.get();
     }
 
     public void set(String key, Object value) {
-        contextMap.put(key, new WeakReference(value));
+        contextMap.put(key, new WeakReference<Object>(value));
     }
 
     /**
      * Reads the first object from the list saved under given key in the context. If value under key
      * represents non List object then a RuntimeException is thrown.
      * 
+     * @param <T>
+     *            inferred type
      * @param key
      *            context key for the string
      * @return top object from the list (index 0) or null if no key or list empty
      */
-    public Object peek(String key) {
+    public <T> T peek(String key) {
         synchronized (contextMap) {
             Object o = contextMap.get(key);
             if (o == null) {
                 return null;
             }
-            if (o instanceof List) {
-                if (((List) o).size() == 0) {
+            if (o instanceof List<?>) {
+                if (((List<?>) o).isEmpty()) {
                     return null;
                 }
-                Object ret = ((List) o).get(0);
+                @SuppressWarnings("unchecked")
+                T ret = ((List<? extends T>) o).get(0);
                 return ret;
-            } else {
-                throw new RuntimeException("Cannot top from non List object " + o);
             }
+            throw new RuntimeException("Cannot top from non List object " + o);
         }
     }
 
@@ -260,32 +267,34 @@ public class IvyContext {
      * Removes and returns first object from the list saved under given key in the context. If value
      * under key represents non List object then a RuntimeException is thrown.
      * 
+     * @param <T>
+     *            inferred type
      * @param key
      *            context key for the string
      * @return top object from the list (index 0) or null if no key or list empty
      */
-    public Object pop(String key) {
+    public <T> T pop(String key) {
         synchronized (contextMap) {
             Object o = contextMap.get(key);
             if (o == null) {
                 return null;
             }
-            if (o instanceof List) {
-                if (((List) o).size() == 0) {
+            if (o instanceof List<?>) {
+                if (((List<?>) o).isEmpty()) {
                     return null;
                 }
-                Object ret = ((List) o).remove(0);
+                @SuppressWarnings("unchecked")
+                T ret = ((List<? extends T>) o).remove(0);
                 return ret;
-            } else {
-                throw new RuntimeException("Cannot pop from non List object " + o);
             }
+            throw new RuntimeException("Cannot pop from non List object " + o);
         }
     }
 
     /**
-     * Removes and returns first object from the list saved under given key in the context but only
-     * if it equals the given expectedValue - if not a false value is returned. If value under key
-     * represents non List object then a RuntimeException is thrown.
+     * Removes first object from the list saved under given key in the context but only if it equals
+     * the given expectedValue - if not a false value is returned. If value under key represents non
+     * List object then a RuntimeException is thrown.
      * 
      * @param key
      *            context key for the string
@@ -297,19 +306,18 @@ public class IvyContext {
             if (o == null) {
                 return false;
             }
-            if (o instanceof List) {
-                if (((List) o).size() == 0) {
+            if (o instanceof List<?>) {
+                if (((List<?>) o).isEmpty()) {
                     return false;
                 }
-                Object top = ((List) o).get(0);
+                Object top = ((List<?>) o).get(0);
                 if (!top.equals(expectedValue)) {
                     return false;
                 }
-                ((List) o).remove(0);
+                ((List<?>) o).remove(0);
                 return true;
-            } else {
-                throw new RuntimeException("Cannot pop from non List object " + o);
             }
+            throw new RuntimeException("Cannot pop from non List object " + o);
         }
     }
 
@@ -324,17 +332,18 @@ public class IvyContext {
      * @param value
      *            value to be saved under the key
      */
-    public void push(String key, Object value) {
+    public <T> void push(String key, T value) {
         synchronized (contextMap) {
-            if (!contextMap.containsKey(key)) {
-                contextMap.put(key, new LinkedList());
-            }
             Object o = contextMap.get(key);
-            if (o instanceof List) {
-                ((List) o).add(0, value);
-            } else {
+            if (o == null) {
+                o = new LinkedList<Object>();
+                contextMap.put(key, o);
+            } else if (!(o instanceof List<?>)) {
                 throw new RuntimeException("Cannot push to non List object " + o);
             }
+            @SuppressWarnings("unchecked")
+            List<? super T> list = (List<? super T>) o;
+            list.add(0, value);
         }
     }
 
@@ -351,12 +360,10 @@ public class IvyContext {
         if (ivy == null) {
             if (defaultIvy == null) {
                 return Message.getDefaultLogger();
-            } else {
-                return defaultIvy.getLoggerEngine();
             }
-        } else {
-            return ivy.getLoggerEngine();
+            return defaultIvy.getLoggerEngine();
         }
+        return ivy.getLoggerEngine();
     }
 
     public EventManager getEventManager() {

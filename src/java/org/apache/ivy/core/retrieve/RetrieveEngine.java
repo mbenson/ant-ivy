@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.ivy.core.IvyContext;
@@ -78,10 +77,10 @@ public class RetrieveEngine {
     @Deprecated
     public int retrieve(ModuleRevisionId mrid, String destFilePattern, RetrieveOptions options)
             throws IOException {
-        RetrieveOptions retieveOptions = new RetrieveOptions(options);
-        retieveOptions.setDestArtifactPattern(destFilePattern);
+        RetrieveOptions retrieveOptions = new RetrieveOptions(options);
+        retrieveOptions.setDestArtifactPattern(destFilePattern);
 
-        RetrieveReport result = retrieve(mrid, retieveOptions);
+        RetrieveReport result = retrieve(mrid, retrieveOptions);
         return result.getNbrArtifactsCopied();
     }
 
@@ -98,8 +97,8 @@ public class RetrieveEngine {
         Message.verbose("\tcheckUpToDate=" + settings.isCheckUpToDate());
         long start = System.currentTimeMillis();
 
-        String destFilePattern = IvyPatternHelper.substituteVariables(
-            options.getDestArtifactPattern(), settings.getVariables());
+        String destFilePattern = IvyPatternHelper
+                .substituteVariables(options.getDestArtifactPattern(), settings.getVariables());
         String destIvyPattern = IvyPatternHelper.substituteVariables(options.getDestIvyPattern(),
             settings.getVariables());
 
@@ -114,28 +113,30 @@ public class RetrieveEngine {
         }
 
         try {
-            Map<File, File> destToSrcMap = null;
             Map<ArtifactDownloadReport, Set<String>> artifactsToCopy = determineArtifactsToCopy(
                 mrid, destFilePattern, options);
-            File fileRetrieveRoot = settings.resolveFile(IvyPatternHelper
-                    .getTokenRoot(destFilePattern));
+            File fileRetrieveRoot = settings
+                    .resolveFile(IvyPatternHelper.getTokenRoot(destFilePattern));
             report.setRetrieveRoot(fileRetrieveRoot);
-            File ivyRetrieveRoot = destIvyPattern == null ? null : settings
-                    .resolveFile(IvyPatternHelper.getTokenRoot(destIvyPattern));
+            File ivyRetrieveRoot = destIvyPattern == null ? null
+                    : settings.resolveFile(IvyPatternHelper.getTokenRoot(destIvyPattern));
             Collection<File> targetArtifactsStructure = new HashSet<File>();
             // Set(File) set of all paths which should be present at then end of retrieve (useful
             // for sync)
             Collection<File> targetIvysStructure = new HashSet<File>(); // same for ivy files
 
+            Map<File, File> destToSrcMap;
             if (options.isMakeSymlinksInMass()) {
                 // The HashMap is of "destToSrc" because src could go two places, but dest can only
                 // come from one
                 destToSrcMap = new HashMap<File, File>();
+            } else {
+                destToSrcMap = null;
             }
 
             // do retrieve
             long totalCopiedSize = 0;
-            for (Entry<ArtifactDownloadReport, Set<String>> artifactAndPaths : artifactsToCopy
+            for (Map.Entry<ArtifactDownloadReport, Set<String>> artifactAndPaths : artifactsToCopy
                     .entrySet()) {
                 ArtifactDownloadReport artifact = artifactAndPaths.getKey();
                 File archive = artifact.getLocalFile();
@@ -157,8 +158,8 @@ public class RetrieveEngine {
                             // There is no unitary event for the mass sym linking.
                             // skip the event declaration.
                             if (!options.isMakeSymlinksInMass()) {
-                                this.eventManager.fireIvyEvent(new StartRetrieveArtifactEvent(
-                                        artifact, destFile));
+                                this.eventManager.fireIvyEvent(
+                                    new StartRetrieveArtifactEvent(artifact, destFile));
                             }
                         }
                         if (options.isMakeSymlinksInMass()) {
@@ -174,8 +175,8 @@ public class RetrieveEngine {
                             // There is no unitary event for the mass sym linking.
                             // skip the event declaration.
                             if (!options.isMakeSymlinksInMass()) {
-                                this.eventManager.fireIvyEvent(new EndRetrieveArtifactEvent(
-                                        artifact, destFile));
+                                this.eventManager.fireIvyEvent(
+                                    new EndRetrieveArtifactEvent(artifact, destFile));
                             }
                         }
                         totalCopiedSize += FileUtil.getFileLength(destFile);
@@ -192,8 +193,8 @@ public class RetrieveEngine {
                         Collection<File> files = FileUtil.listAll(destFile,
                             Collections.<String> emptyList());
                         for (File file : files) {
-                            targetArtifactsStructure.addAll(FileUtil.getPathFiles(fileRetrieveRoot,
-                                file));
+                            targetArtifactsStructure
+                                    .addAll(FileUtil.getPathFiles(fileRetrieveRoot, file));
                         }
                     }
                 }
@@ -211,8 +212,8 @@ public class RetrieveEngine {
                 Collection<String> ignoreList = Arrays.asList(ignorableFilenames);
 
                 Collection<File> existingArtifacts = FileUtil.listAll(fileRetrieveRoot, ignoreList);
-                Collection<File> existingIvys = ivyRetrieveRoot == null ? null : FileUtil.listAll(
-                    ivyRetrieveRoot, ignoreList);
+                Collection<File> existingIvys = ivyRetrieveRoot == null ? null
+                        : FileUtil.listAll(ivyRetrieveRoot, ignoreList);
 
                 if (fileRetrieveRoot.equals(ivyRetrieveRoot)) {
                     Collection<File> target = targetArtifactsStructure;
@@ -228,11 +229,10 @@ public class RetrieveEngine {
                 }
             }
             long elapsedTime = System.currentTimeMillis() - start;
-            String msg = "\t"
-                    + report.getNbrArtifactsCopied()
-                    + " artifacts copied"
-                    + (settings.isCheckUpToDate() ? (", " + report.getNbrArtifactsUpToDate() + " already retrieved")
-                            : "") + " (" + (totalCopiedSize / KILO) + "kB/" + elapsedTime + "ms)";
+            String msg = "\t" + report.getNbrArtifactsCopied() + " artifacts copied"
+                    + (settings.isCheckUpToDate()
+                            ? (", " + report.getNbrArtifactsUpToDate() + " already retrieved") : "")
+                    + " (" + (totalCopiedSize / KILO) + "kB/" + elapsedTime + "ms)";
             if (LogOptions.LOG_DEFAULT.equals(options.getLog())) {
                 Message.info(msg);
             } else {
@@ -240,9 +240,9 @@ public class RetrieveEngine {
             }
             Message.verbose("\tretrieve done (" + (elapsedTime) + "ms)");
             if (this.eventManager != null) {
-                this.eventManager.fireIvyEvent(new EndRetrieveEvent(mrid, confs, elapsedTime,
-                        report.getNbrArtifactsCopied(), report.getNbrArtifactsUpToDate(),
-                        totalCopiedSize, options));
+                this.eventManager.fireIvyEvent(
+                    new EndRetrieveEvent(mrid, confs, elapsedTime, report.getNbrArtifactsCopied(),
+                            report.getNbrArtifactsUpToDate(), totalCopiedSize, options));
             }
 
             return report;
@@ -316,9 +316,7 @@ public class RetrieveEngine {
         final Map<String, Set<String>> conflictsConfMap = new HashMap<String, Set<String>>();
 
         XmlReportParser parser = new XmlReportParser();
-        for (int i = 0; i < confs.length; i++) {
-            final String conf = confs[i];
-
+        for (final String conf : confs) {
             File report = cacheManager.getConfigurationResolveReportInCache(options.getResolveId(),
                 conf);
             parser.parse(report);
@@ -327,8 +325,8 @@ public class RetrieveEngine {
                     Arrays.asList(parser.getArtifactReports()));
             if (destIvyPattern != null) {
                 ModuleRevisionId[] mrids = parser.getRealDependencyRevisionIds();
-                for (int j = 0; j < mrids.length; j++) {
-                    artifacts.add(parser.getMetadataArtifactReport(mrids[j]));
+                for (ModuleRevisionId mrid2 : mrids) {
+                    artifacts.add(parser.getMetadataArtifactReport(mrid2));
                 }
             }
             for (ArtifactDownloadReport adr : artifacts) {
@@ -364,24 +362,24 @@ public class RetrieveEngine {
                     destinations = options.getMapper().mapFileName(copyDest);
                 }
 
-                for (int j = 0; j < destinations.length; j++) {
-                    dest.add(destinations[j]);
+                for (String destination : destinations) {
+                    dest.add(destination);
 
-                    Set<ArtifactRevisionId> conflicts = conflictsMap.get(destinations[j]);
+                    Set<ArtifactRevisionId> conflicts = conflictsMap.get(destination);
                     Set<ArtifactDownloadReport> conflictsReports = conflictsReportsMap
-                            .get(destinations[j]);
-                    Set<String> conflictsConf = conflictsConfMap.get(destinations[j]);
+                            .get(destination);
+                    Set<String> conflictsConf = conflictsConfMap.get(destination);
                     if (conflicts == null) {
                         conflicts = new HashSet<ArtifactRevisionId>();
-                        conflictsMap.put(destinations[j], conflicts);
+                        conflictsMap.put(destination, conflicts);
                     }
                     if (conflictsReports == null) {
                         conflictsReports = new HashSet<ArtifactDownloadReport>();
-                        conflictsReportsMap.put(destinations[j], conflictsReports);
+                        conflictsReportsMap.put(destination, conflictsReports);
                     }
                     if (conflictsConf == null) {
                         conflictsConf = new HashSet<String>();
-                        conflictsConfMap.put(destinations[j], conflictsConf);
+                        conflictsConfMap.put(destination, conflictsConf);
                     }
                     if (conflicts.add(artifact.getId())) {
                         conflictsReports.add(adr);
@@ -392,7 +390,7 @@ public class RetrieveEngine {
         }
 
         // resolve conflicts if any
-        for (Entry<String, Set<ArtifactRevisionId>> entry : conflictsMap.entrySet()) {
+        for (Map.Entry<String, Set<ArtifactRevisionId>> entry : conflictsMap.entrySet()) {
             String copyDest = entry.getKey();
             Set<ArtifactRevisionId> artifacts = entry.getValue();
             Set<String> conflictsConfs = conflictsConfMap.get(copyDest);
@@ -411,8 +409,7 @@ public class RetrieveEngine {
                     ArtifactDownloadReport current = artifactsList.get(i);
                     if (winnerMD.equals(current.getArtifact().getModuleRevisionId())) {
                         throw new RuntimeException("Multiple artifacts of the module " + winnerMD
-                                + " are retrieved to the same file! Update the retrieve pattern "
-                                + " to fix this error.");
+                                + " are retrieved to the same file! Update the retrieve pattern to fix this error.");
                     }
                 }
 
@@ -423,8 +420,8 @@ public class RetrieveEngine {
                 // and going backward to the least artifact
                 for (int i = artifactsList.size() - 2; i >= 0; i--) {
                     ArtifactDownloadReport looser = artifactsList.get(i);
-                    Message.verbose("\t\tremoving conflict looser artifact: "
-                            + looser.getArtifact());
+                    Message.verbose(
+                        "\t\tremoving conflict looser artifact: " + looser.getArtifact());
                     // for each loser, we remove the pair (loser - copyDest) in the artifactsToCopy
                     // map
                     Set<String> dest = artifactsToCopy.get(looser);
@@ -479,12 +476,12 @@ public class RetrieveEngine {
                 if (a1.getPublicationDate().after(a2.getPublicationDate())) {
                     // a1 is after a2 <=> a1 is younger than a2 <=> a1 wins the conflict battle
                     return +1;
-                } else if (a1.getPublicationDate().before(a2.getPublicationDate())) {
+                }
+                if (a1.getPublicationDate().before(a2.getPublicationDate())) {
                     // a1 is before a2 <=> a2 is younger than a1 <=> a2 wins the conflict battle
                     return -1;
-                } else {
-                    return 0;
                 }
+                return 0;
             }
         };
     }

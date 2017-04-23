@@ -261,10 +261,9 @@ public class DeliverOptions {
     }
 
     public String toString() {
-        return "status=" + status + " pubdate=" + pubdate + " validate=" + validate
-                + " resolveDynamicRevisions=" + resolveDynamicRevisions + " merge=" + merge
-                + " resolveId=" + resolveId + " pubBranch=" + pubBranch;
-
+        return String.format(
+            "status=%s pubdate=%tc validate=%b resolveDynamicRevisions=%b merge=%b resolveId=%s pubBranch=%s",
+            status, pubdate, validate, resolveDynamicRevisions, merge, resolveId, pubBranch);
     }
 
 }

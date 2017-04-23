@@ -50,6 +50,15 @@ public class ResolveOptions extends LogOptions {
     public static final String[] RESOLVEMODES = new String[] {RESOLVEMODE_DEFAULT,
             RESOLVEMODE_DYNAMIC};
 
+    public static String getDefaultResolveId(ModuleDescriptor md) {
+        ModuleId module = md.getModuleRevisionId().getModuleId();
+        return getDefaultResolveId(module);
+    }
+
+    public static String getDefaultResolveId(ModuleId moduleId) {
+        return moduleId.getOrganisation() + "-" + moduleId.getName();
+    }
+
     /**
      * an array of configuration names to resolve - must not be null nor empty
      */
@@ -200,7 +209,7 @@ public class ResolveOptions extends LogOptions {
      * 
      * @param md
      *            Used to get the exact values for special confs.
-     * */
+     */
     public String[] getConfs(ModuleDescriptor md) {
         // TODO add isInline, in that case, replace * by *(public).
         return ConfigurationUtils.replaceWildcards(confs, md);
@@ -299,15 +308,6 @@ public class ResolveOptions extends LogOptions {
 
     public boolean getCheckIfChanged() {
         return checkIfChanged;
-    }
-
-    public static String getDefaultResolveId(ModuleDescriptor md) {
-        ModuleId module = md.getModuleRevisionId().getModuleId();
-        return getDefaultResolveId(module);
-    }
-
-    public static String getDefaultResolveId(ModuleId moduleId) {
-        return moduleId.getOrganisation() + "-" + moduleId.getName();
     }
 
 }

@@ -39,7 +39,7 @@ public interface RepositoryCacheManager {
      * 
      * @return the name of the repository cache manager.
      */
-    public abstract String getName();
+    abstract String getName();
 
     /**
      * Saves the information of which resolvers were used to resolve a module (both for metadata and
@@ -53,7 +53,7 @@ public interface RepositoryCacheManager {
      * @param artifactResolverName
      *            artifact resolver name
      */
-    public abstract void saveResolvers(ModuleDescriptor descriptor, String metadataResolverName,
+    abstract void saveResolvers(ModuleDescriptor descriptor, String metadataResolverName,
             String artifactResolverName);
 
     /**
@@ -66,7 +66,7 @@ public interface RepositoryCacheManager {
      *            the artifact for which the saved artifact origin should be returned.
      * @return the artifact origin of the given artifact as saved in this cache
      */
-    public abstract ArtifactOrigin getSavedArtifactOrigin(Artifact artifact);
+    abstract ArtifactOrigin getSavedArtifactOrigin(Artifact artifact);
 
     /**
      * Search a module descriptor in cache for a mrid
@@ -83,7 +83,7 @@ public interface RepositoryCacheManager {
      * @return the ResolvedModuleRevision corresponding to the module found, null if none correct
      *         has been found in cache
      */
-    public abstract ResolvedModuleRevision findModuleInCache(DependencyDescriptor dd,
+    abstract ResolvedModuleRevision findModuleInCache(DependencyDescriptor dd,
             ModuleRevisionId requestedRevisionId, CacheMetadataOptions options,
             String expectedResolver);
 
@@ -101,7 +101,7 @@ public interface RepositoryCacheManager {
      *            a set of options to adjust the download
      * @return a report indicating how the download was performed
      */
-    public abstract ArtifactDownloadReport download(Artifact artifact,
+    abstract ArtifactDownloadReport download(Artifact artifact,
             ArtifactResourceResolver resourceResolver, ResourceDownloader resourceDownloader,
             CacheDownloadOptions options);
 
@@ -125,8 +125,8 @@ public interface RepositoryCacheManager {
      *            the repository which resolve the content of the resource
      * @return a report indicating how the download was performed
      */
-    public ArtifactDownloadReport downloadRepositoryResource(Resource resource, String name,
-            String type, String extension, CacheResourceOptions options, Repository repository);
+    ArtifactDownloadReport downloadRepositoryResource(Resource resource, String name, String type,
+            String extension, CacheResourceOptions options, Repository repository);
 
     /**
      * Caches an original module descriptor.
@@ -153,7 +153,7 @@ public interface RepositoryCacheManager {
      * @throws ParseException
      *             if an exception occurred while parsing the module descriptor
      */
-    public ResolvedModuleRevision cacheModuleDescriptor(DependencyResolver resolver,
+    ResolvedModuleRevision cacheModuleDescriptor(DependencyResolver resolver,
             ResolvedResource orginalMetadataRef, DependencyDescriptor dd,
             Artifact requestedMetadataArtifact, ResourceDownloader downloader,
             CacheMetadataOptions options) throws ParseException;
@@ -172,14 +172,14 @@ public interface RepositoryCacheManager {
      * @param writer
      *            a {@link ModuleDescriptorWriter} able to write the module descriptor to a stream.
      */
-    public void originalToCachedModuleDescriptor(DependencyResolver resolver,
+    void originalToCachedModuleDescriptor(DependencyResolver resolver,
             ResolvedResource orginalMetadataRef, Artifact requestedMetadataArtifact,
             ResolvedModuleRevision rmr, ModuleDescriptorWriter writer);
 
     /**
      * Cleans the whole cache.
      */
-    public void clean();
+    void clean();
 
     /**
      * Caches a dynamic revision constraint resolution.
@@ -191,7 +191,8 @@ public interface RepositoryCacheManager {
      * @deprecated See {@link #saveResolvedRevision(String, ModuleRevisionId, String)} which
      *             prevents cache + * thrashing when multiple resolvers store the same dynamicMrid
      */
-    public void saveResolvedRevision(ModuleRevisionId dynamicMrid, String revision);
+    @Deprecated
+    void saveResolvedRevision(ModuleRevisionId dynamicMrid, String revision);
 
     /**
      * Caches a dynamic revision constraint resolution for a specific resolver.
@@ -203,7 +204,5 @@ public interface RepositoryCacheManager {
      * @param revision
      *            the resolved revision
      */
-    public void saveResolvedRevision(String resolverName, ModuleRevisionId dynamicMrid,
-            String revision);
-
+    void saveResolvedRevision(String resolverName, ModuleRevisionId dynamicMrid, String revision);
 }

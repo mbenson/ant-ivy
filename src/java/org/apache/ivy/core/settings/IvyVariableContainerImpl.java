@@ -25,15 +25,15 @@ import org.apache.ivy.util.Message;
 
 public class IvyVariableContainerImpl implements IvyVariableContainer {
 
-    private Map variables;
+    private Map<String, String> variables;
 
     private String envPrefix;
 
     public IvyVariableContainerImpl() {
-        this.variables = new HashMap();
+        this.variables = new HashMap<String, String>();
     }
 
-    public IvyVariableContainerImpl(Map variables) {
+    public IvyVariableContainerImpl(Map<String, String> variables) {
         this.variables = variables;
     }
 
@@ -53,10 +53,10 @@ public class IvyVariableContainerImpl implements IvyVariableContainer {
     }
 
     public void setEnvironmentPrefix(String prefix) {
-        if ((prefix != null) && !prefix.endsWith(".")) {
-            this.envPrefix = prefix + ".";
-        } else {
+        if ((prefix == null) || prefix.endsWith(".")) {
             this.envPrefix = prefix;
+        } else {
+            this.envPrefix = prefix + ".";
         }
     }
 
@@ -64,7 +64,7 @@ public class IvyVariableContainerImpl implements IvyVariableContainer {
         return IvyPatternHelper.substituteVariables(value, this);
     }
 
-    protected Map getVariables() {
+    protected Map<String, String> getVariables() {
         return variables;
     }
 
@@ -88,14 +88,14 @@ public class IvyVariableContainerImpl implements IvyVariableContainer {
         return val;
     }
 
-    public Object clone() {
+    public IvyVariableContainerImpl clone() {
         IvyVariableContainerImpl clone;
         try {
             clone = (IvyVariableContainerImpl) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException("unable to clone a " + this.getClass());
         }
-        clone.variables = new HashMap(this.variables);
+        clone.variables = new HashMap<String, String>(this.variables);
         return clone;
     }
 }

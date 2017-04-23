@@ -25,5 +25,4 @@ public interface CheckEngineSettings extends ParserSettings {
     boolean doValidate();
 
     DependencyResolver getResolver(String resolvername);
-
 }

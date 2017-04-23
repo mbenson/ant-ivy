@@ -35,7 +35,6 @@ class MapperAdapter implements FileNameMapper {
         if (result == null) {
             result = EMPTY;
         }
-
         return result;
     }
 

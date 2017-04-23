@@ -66,7 +66,7 @@ import org.apache.ivy.util.filter.OrFilter;
  * 
  * @since 1.4
  */
-public class IvyEventFilter implements Filter {
+public class IvyEventFilter implements Filter<IvyEvent> {
     private static final String NOT = "NOT ";
 
     private static final String OR = " OR ";
@@ -75,28 +75,27 @@ public class IvyEventFilter implements Filter {
 
     private PatternMatcher matcher;
 
-    private Filter nameFilter;
+    private Filter<IvyEvent> nameFilter;
 
-    private Filter attFilter;
+    private Filter<IvyEvent> attFilter;
 
     public IvyEventFilter(String event, String filterExpression, PatternMatcher matcher) {
         this.matcher = matcher == null ? ExactPatternMatcher.INSTANCE : matcher;
         if (event == null) {
-            nameFilter = NoFilter.INSTANCE;
+            nameFilter = NoFilter.instance();
         } else {
             final Matcher eventNameMatcher = this.matcher.getMatcher(event);
-            nameFilter = new Filter() {
-                public boolean accept(Object o) {
-                    IvyEvent e = (IvyEvent) o;
+            nameFilter = new Filter<IvyEvent>() {
+                public boolean accept(IvyEvent e) {
                     return eventNameMatcher.matches(e.getName());
                 }
             };
         }
-        attFilter = filterExpression == null || filterExpression.trim().length() == 0 ? NoFilter.INSTANCE
-                : parseExpression(filterExpression);
+        attFilter = filterExpression == null || filterExpression.trim().length() == 0
+                ? NoFilter.<IvyEvent> instance() : parseExpression(filterExpression);
     }
 
-    private Filter parseExpression(String filterExpression) {
+    private Filter<IvyEvent> parseExpression(String filterExpression) {
         // expressions handled for the moment: (informal grammar)
         // EXP := SIMPLE_EXP | AND_EXP | OR_EXP | NOT_EXP
         // AND_EXP := EXP && EXP
@@ -110,49 +109,43 @@ public class IvyEventFilter implements Filter {
             index = filterExpression.indexOf(OR);
             if (index == -1) {
                 if (filterExpression.startsWith(NOT)) {
-                    return new NotFilter(parseExpression(filterExpression.substring(NOT.length())));
-                } else {
-                    index = filterExpression.indexOf("=");
-                    if (index == -1) {
-                        throw new IllegalArgumentException("bad filter expression: "
-                                + filterExpression + ": no equal sign found");
-                    }
-                    final String attname = filterExpression.substring(0, index).trim();
-                    String[] values = filterExpression.substring(index + 1).trim().split(",");
-                    final Matcher[] matchers = new Matcher[values.length];
-                    for (int i = 0; i < values.length; i++) {
-                        matchers[i] = matcher.getMatcher(values[i].trim());
-                    }
-                    return new Filter() {
-                        public boolean accept(Object o) {
-                            IvyEvent e = (IvyEvent) o;
-                            String val = (String) e.getAttributes().get(attname);
-                            if (val == null) {
-                                return false;
-                            }
-                            for (int i = 0; i < matchers.length; i++) {
-                                if (matchers[i].matches(val)) {
-                                    return true;
-                                }
-                            }
+                    return new NotFilter<IvyEvent>(
+                            parseExpression(filterExpression.substring(NOT.length())));
+                }
+                index = filterExpression.indexOf("=");
+                if (index == -1) {
+                    throw new IllegalArgumentException(
+                            "bad filter expression: " + filterExpression + ": no equal sign found");
+                }
+                final String attname = filterExpression.substring(0, index).trim();
+                String[] values = filterExpression.substring(index + 1).trim().split(",");
+                final Matcher[] matchers = new Matcher[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    matchers[i] = matcher.getMatcher(values[i].trim());
+                }
+                return new Filter<IvyEvent>() {
+                    public boolean accept(IvyEvent e) {
+                        String val = e.getAttributes().get(attname);
+                        if (val == null) {
                             return false;
                         }
-                    };
-                }
-            } else {
-                return new OrFilter(parseExpression(filterExpression.substring(0, index)),
-                        parseExpression(filterExpression.substring(index + OR.length())));
+                        for (Matcher matcher : matchers) {
+                            if (matcher.matches(val)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                };
             }
-        } else {
-            return new AndFilter(parseExpression(filterExpression.substring(0, index)),
-                    parseExpression(filterExpression.substring(index + AND.length())));
+            return new OrFilter<IvyEvent>(parseExpression(filterExpression.substring(0, index)),
+                    parseExpression(filterExpression.substring(index + OR.length())));
         }
+        return new AndFilter<IvyEvent>(parseExpression(filterExpression.substring(0, index)),
+                parseExpression(filterExpression.substring(index + AND.length())));
     }
 
-    public boolean accept(Object o) {
-        if (!(o instanceof IvyEvent)) {
-            return false;
-        }
+    public boolean accept(IvyEvent o) {
         return nameFilter.accept(o) && attFilter.accept(o);
     }
 

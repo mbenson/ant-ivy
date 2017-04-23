@@ -22,9 +22,9 @@ import org.apache.ivy.util.filter.Filter;
 public class FilteredIvyListener implements IvyListener {
     private IvyListener listener;
 
-    private Filter filter;
+    private Filter<? super IvyEvent> filter;
 
-    public FilteredIvyListener(IvyListener listener, Filter filter) {
+    public FilteredIvyListener(IvyListener listener, Filter<? super IvyEvent> filter) {
         this.listener = listener;
         this.filter = filter;
     }
@@ -33,7 +33,7 @@ public class FilteredIvyListener implements IvyListener {
         return listener;
     }
 
-    public Filter getFilter() {
+    public Filter<? super IvyEvent> getFilter() {
         return filter;
     }
 

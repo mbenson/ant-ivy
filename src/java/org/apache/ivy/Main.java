@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -70,135 +69,96 @@ public final class Main {
     private static final int HELP_WIDTH = 80;
 
     static CommandLineParser getParser() {
-        return new CommandLineParser()
-                .addCategory("settings options")
-                .addOption(
-                    new OptionBuilder("settings").arg("settingsfile")
-                            .description("use given file for settings").create())
-                .addOption(
-                    new OptionBuilder("cache").arg("cachedir")
-                            .description("use given directory for cache").create())
-                .addOption(
-                    new OptionBuilder("novalidate").description(
-                        "do not validate ivy files against xsd").create())
-                .addOption(
-                    new OptionBuilder("m2compatible").description("use maven2 compatibility")
-                            .create())
-                .addOption(
-                    new OptionBuilder("conf").arg("settingsfile").deprecated()
-                            .description("use given file for settings").create())
-                .addOption(
-                    new OptionBuilder("useOrigin")
-                            .deprecated()
-                            .description(
-                                "use original artifact location "
-                                        + "with local resolvers instead of copying to the cache")
-                            .create())
+        return new CommandLineParser().addCategory("settings options")
+                .addOption(new OptionBuilder("settings").arg("settingsfile")
+                        .description("use given file for settings").create())
+                .addOption(new OptionBuilder("cache").arg("cachedir")
+                        .description("use given directory for cache").create())
+                .addOption(new OptionBuilder("novalidate")
+                        .description("do not validate ivy files against xsd").create())
+                .addOption(new OptionBuilder("m2compatible").description("use maven2 compatibility")
+                        .create())
+                .addOption(new OptionBuilder("conf").arg("settingsfile").deprecated()
+                        .description("use given file for settings").create())
+                .addOption(new OptionBuilder("useOrigin").deprecated()
+                        .description(
+                            "use original artifact location with local resolvers instead of copying to the cache")
+                        .create())
 
                 .addCategory("resolve options")
-                .addOption(
-                    new OptionBuilder("ivy").arg("ivyfile")
-                            .description("use given file as ivy file").create())
-                .addOption(
-                    new OptionBuilder("refresh").description("refresh dynamic resolved revisions")
-                            .create())
-                .addOption(
-                    new OptionBuilder("dependency")
-                            .arg("organisation")
-                            .arg("module")
-                            .arg("revision")
-                            .description(
-                                "use this instead of ivy file to do the rest "
-                                        + "of the work with this as a dependency.").create())
-                .addOption(
-                    new OptionBuilder("confs").arg("configurations").countArgs(false)
-                            .description("resolve given configurations").create())
-                .addOption(
-                    new OptionBuilder("types").arg("types").countArgs(false)
-                            .description("comma separated list of accepted artifact types")
-                            .create())
-                .addOption(
-                    new OptionBuilder("mode").arg("resolvemode")
-                            .description("the resolve mode to use").create())
-                .addOption(
-                    new OptionBuilder("notransitive").description(
-                        "do not resolve dependencies transitively").create())
+                .addOption(new OptionBuilder("ivy").arg("ivyfile")
+                        .description("use given file as ivy file").create())
+                .addOption(new OptionBuilder("refresh")
+                        .description("refresh dynamic resolved revisions").create())
+                .addOption(new OptionBuilder("dependency").arg("organisation").arg("module")
+                        .arg("revision")
+                        .description(
+                            "use this instead of ivy file to do the rest of the work with this as a dependency.")
+                        .create())
+                .addOption(new OptionBuilder("confs").arg("configurations").countArgs(false)
+                        .description("resolve given configurations").create())
+                .addOption(new OptionBuilder("types").arg("types").countArgs(false)
+                        .description("comma separated list of accepted artifact types").create())
+                .addOption(new OptionBuilder("mode").arg("resolvemode")
+                        .description("the resolve mode to use").create())
+                .addOption(new OptionBuilder("notransitive")
+                        .description("do not resolve dependencies transitively").create())
 
                 .addCategory("retrieve options")
-                .addOption(
-                    new OptionBuilder("retrieve").arg("retrievepattern")
-                            .description("use given pattern as retrieve pattern").create())
-                .addOption(
-                    new OptionBuilder("ivypattern").arg("pattern")
-                            .description("use given pattern to copy the ivy files").create())
+                .addOption(new OptionBuilder("retrieve").arg("retrievepattern")
+                        .description("use given pattern as retrieve pattern").create())
+                .addOption(new OptionBuilder("ivypattern").arg("pattern")
+                        .description("use given pattern to copy the ivy files").create())
                 .addOption(
                     new OptionBuilder("sync").description("use sync mode for retrieve").create())
                 .addOption(
                     new OptionBuilder("symlink").description("create symbolic links").create())
 
                 .addCategory("cache path options")
-                .addOption(
-                    new OptionBuilder("cachepath")
-                            .arg("cachepathfile")
-                            .description(
-                                "outputs a classpath consisting of all dependencies in cache "
-                                        + "(including transitive ones) "
-                                        + "of the given ivy file to the given cachepathfile")
-                            .create())
+                .addOption(new OptionBuilder("cachepath").arg("cachepathfile")
+                        .description(
+                            "outputs a classpath consisting of all dependencies in cache (including transitive ones) of the given ivy file to the given cachepathfile")
+                        .create())
 
                 .addCategory("deliver options")
-                .addOption(
-                    new OptionBuilder("deliverto").arg("ivypattern")
-                            .description("use given pattern as resolved ivy file pattern").create())
+                .addOption(new OptionBuilder("deliverto").arg("ivypattern")
+                        .description("use given pattern as resolved ivy file pattern").create())
 
                 .addCategory("publish options")
-                .addOption(
-                    new OptionBuilder("publish").arg("resolvername")
-                            .description("use given resolver to publish to").create())
-                .addOption(
-                    new OptionBuilder("publishpattern").arg("artpattern")
-                            .description("use given pattern to find artifacts to publish").create())
-                .addOption(
-                    new OptionBuilder("revision").arg("revision")
-                            .description("use given revision to publish the module").create())
-                .addOption(
-                    new OptionBuilder("status").arg("status")
-                            .description("use given status to publish the module").create())
-                .addOption(
-                    new OptionBuilder("overwrite").description(
-                        "overwrite files in the repository if they exist").create())
+                .addOption(new OptionBuilder("publish").arg("resolvername")
+                        .description("use given resolver to publish to").create())
+                .addOption(new OptionBuilder("publishpattern").arg("artpattern")
+                        .description("use given pattern to find artifacts to publish").create())
+                .addOption(new OptionBuilder("revision").arg("revision")
+                        .description("use given revision to publish the module").create())
+                .addOption(new OptionBuilder("status").arg("status")
+                        .description("use given status to publish the module").create())
+                .addOption(new OptionBuilder("overwrite")
+                        .description("overwrite files in the repository if they exist").create())
 
                 .addCategory("http auth options")
-                .addOption(
-                    new OptionBuilder("realm").arg("realm")
-                            .description("use given realm for HTTP AUTH").create())
-                .addOption(
-                    new OptionBuilder("host").arg("host")
-                            .description("use given host for HTTP AUTH").create())
-                .addOption(
-                    new OptionBuilder("username").arg("username")
-                            .description("use given username for HTTP AUTH").create())
-                .addOption(
-                    new OptionBuilder("passwd").arg("passwd")
-                            .description("use given password for HTTP AUTH").create())
+                .addOption(new OptionBuilder("realm").arg("realm")
+                        .description("use given realm for HTTP AUTH").create())
+                .addOption(new OptionBuilder("host").arg("host")
+                        .description("use given host for HTTP AUTH").create())
+                .addOption(new OptionBuilder("username").arg("username")
+                        .description("use given username for HTTP AUTH").create())
+                .addOption(new OptionBuilder("passwd").arg("passwd")
+                        .description("use given password for HTTP AUTH").create())
 
                 .addCategory("launcher options")
-                .addOption(
-                    new OptionBuilder("main").arg("main")
-                            .description("the FQCN of the main class to launch").create())
-                .addOption(
-                    new OptionBuilder("args").arg("args").countArgs(false)
-                            .description("the arguments to give to the launched process").create())
-                .addOption(
-                    new OptionBuilder("cp").arg("cp")
-                            .description("extra classpath to use when launching process").create())
+                .addOption(new OptionBuilder("main").arg("main")
+                        .description("the FQCN of the main class to launch").create())
+                .addOption(new OptionBuilder("args").arg("args").countArgs(false)
+                        .description("the arguments to give to the launched process").create())
+                .addOption(new OptionBuilder("cp").arg("cp")
+                        .description("extra classpath to use when launching process").create())
 
                 .addCategory("message options")
                 .addOption(
                     new OptionBuilder("debug").description("set message level to debug").create())
-                .addOption(
-                    new OptionBuilder("verbose").description("set message level to verbose")
-                            .create())
+                .addOption(new OptionBuilder("verbose").description("set message level to verbose")
+                        .create())
                 .addOption(
                     new OptionBuilder("warn").description("set message level to warn").create())
                 .addOption(
@@ -208,9 +168,8 @@ public final class Main {
                 .addOption(new OptionBuilder("?").description("display this help").create())
                 .addOption(
                     new OptionBuilder("deprecated").description("show deprecated options").create())
-                .addOption(
-                    new OptionBuilder("version").description("displays version information")
-                            .create());
+                .addOption(new OptionBuilder("version").description("displays version information")
+                        .create());
     }
 
     public static void main(String[] args) throws Exception {
@@ -247,8 +206,8 @@ public final class Main {
         IvySettings settings = initSettings(line, ivy);
         ivy.pushContext();
 
-        File cache = new File(settings.substitute(line.getOptionValue("cache", settings
-                .getDefaultCache().getAbsolutePath())));
+        File cache = new File(settings.substitute(
+            line.getOptionValue("cache", settings.getDefaultCache().getAbsolutePath())));
 
         if (line.hasOption("cache")) {
             // override default cache path with user supplied cache path
@@ -273,9 +232,8 @@ public final class Main {
             String[] dep = line.getOptionValues("dependency");
             ivyfile = File.createTempFile("ivy", ".xml");
             ivyfile.deleteOnExit();
-            DefaultModuleDescriptor md = DefaultModuleDescriptor
-                    .newDefaultInstance(ModuleRevisionId.newInstance(dep[0], dep[1] + "-caller",
-                        "working"));
+            DefaultModuleDescriptor md = DefaultModuleDescriptor.newDefaultInstance(
+                ModuleRevisionId.newInstance(dep[0], dep[1] + "-caller", "working"));
             DefaultDependencyDescriptor dd = new DefaultDependencyDescriptor(md,
                     ModuleRevisionId.newInstance(dep[0], dep[1], dep[2]), false, false, true);
             for (int i = 0; i < confs.length; i++) {
@@ -296,11 +254,8 @@ public final class Main {
         if (line.hasOption("useOrigin")) {
             ivy.getSettings().useDeprecatedUseOrigin();
         }
-        ResolveOptions resolveOptions = new ResolveOptions()
-                .setConfs(confs)
-                .setValidate(validate)
-                .setResolveMode(line.getOptionValue("mode"))
-                .setArtifactFilter(
+        ResolveOptions resolveOptions = new ResolveOptions().setConfs(confs).setValidate(validate)
+                .setResolveMode(line.getOptionValue("mode")).setArtifactFilter(
                     FilterHelper.getArtifactTypeFilter(line.getOptionValues("types")));
         if (line.hasOption("notransitive")) {
             resolveOptions.setTransitive(false);
@@ -323,18 +278,14 @@ public final class Main {
                 retrievePattern = retrievePattern + "/lib/[conf]/[artifact].[ext]";
             }
             String ivyPattern = settings.substitute(line.getOptionValue("ivypattern"));
-            ivy.retrieve(
-                md.getModuleRevisionId(),
-                retrievePattern,
-                new RetrieveOptions()
-                        .setConfs(confs)
-                        .setSync(line.hasOption("sync"))
-                        .setUseOrigin(line.hasOption("useOrigin"))
-                        .setDestIvyPattern(ivyPattern)
+            ivy.retrieve(md.getModuleRevisionId(),
+                new RetrieveOptions().setConfs(confs).setSync(line.hasOption("sync"))
+                        .setUseOrigin(line.hasOption("useOrigin")).setDestIvyPattern(ivyPattern)
                         .setArtifactFilter(
                             FilterHelper.getArtifactTypeFilter(line.getOptionValues("types")))
                         .setMakeSymlinks(line.hasOption("symlink"))
-                        .setMakeSymlinksInMass(line.hasOption("symlinkmass")));
+                        .setMakeSymlinksInMass(line.hasOption("symlinkmass"))
+                        .setDestArtifactPattern(retrievePattern));
         }
         if (line.hasOption("cachepath")) {
             outputCachePath(ivy, cache, md, confs,
@@ -342,31 +293,28 @@ public final class Main {
         }
 
         if (line.hasOption("revision")) {
-            ivy.deliver(
-                md.getResolvedModuleRevisionId(),
+            ivy.deliver(md.getResolvedModuleRevisionId(),
                 settings.substitute(line.getOptionValue("revision")),
                 settings.substitute(line.getOptionValue("deliverto", "ivy-[revision].xml")),
                 DeliverOptions.newInstance(settings)
                         .setStatus(settings.substitute(line.getOptionValue("status", "release")))
                         .setValidate(validate));
             if (line.hasOption("publish")) {
-                ivy.publish(
-                    md.getResolvedModuleRevisionId(),
+                ivy.publish(md.getResolvedModuleRevisionId(),
                     Collections.singleton(settings.substitute(line.getOptionValue("publishpattern",
                         "distrib/[type]s/[artifact]-[revision].[ext]"))),
                     line.getOptionValue("publish"),
                     new PublishOptions()
                             .setPubrevision(settings.substitute(line.getOptionValue("revision")))
                             .setValidate(validate)
-                            .setSrcIvyPattern(
-                                settings.substitute(line.getOptionValue("deliverto",
-                                    "ivy-[revision].xml")))
+                            .setSrcIvyPattern(settings.substitute(
+                                line.getOptionValue("deliverto", "ivy-[revision].xml")))
                             .setOverwrite(line.hasOption("overwrite")));
             }
         }
         if (line.hasOption("main")) {
             // check if the option cp has been set
-            List fileList = getExtraClasspathFileList(line);
+            List<File> fileList = getExtraClasspathFileList(line);
 
             // merge -args and left over args
             String[] fargs = line.getOptionValues("args");
@@ -399,13 +347,13 @@ public final class Main {
      * @return a List of files to include as extra classpath entries, or <code>null</code> if no cp
      *         option was provided.
      */
-    private static List/* <File> */getExtraClasspathFileList(CommandLine line) {
-        List fileList = null;
+    private static List<File> getExtraClasspathFileList(CommandLine line) {
+        List<File> fileList = null;
         if (line.hasOption("cp")) {
-            fileList = new ArrayList/* <File> */();
+            fileList = new ArrayList<File>();
             String[] cpArray = line.getOptionValues("cp");
-            for (int index = 0; index < cpArray.length; index++) {
-                StringTokenizer tokenizer = new StringTokenizer(cpArray[index],
+            for (String element : cpArray) {
+                StringTokenizer tokenizer = new StringTokenizer(element,
                         System.getProperty("path.separator"));
                 while (tokenizer.hasMoreTokens()) {
                     String token = tokenizer.nextToken();
@@ -413,8 +361,8 @@ public final class Main {
                     if (file.exists()) {
                         fileList.add(file);
                     } else {
-                        Message.warn("Skipping extra classpath '" + file
-                                + "' as it does not exist.");
+                        Message.warn(
+                            "Skipping extra classpath '" + file + "' as it does not exist.");
                     }
                 }
             }
@@ -472,8 +420,8 @@ public final class Main {
             String outFile) {
         try {
             String pathSeparator = System.getProperty("path.separator");
-            StringBuffer buf = new StringBuffer();
-            Collection all = new LinkedHashSet();
+            StringBuilder buf = new StringBuilder();
+            Collection<ArtifactDownloadReport> all = new LinkedHashSet<ArtifactDownloadReport>();
             ResolutionCacheManager cacheMgr = ivy.getResolutionCacheManager();
             XmlReportParser parser = new XmlReportParser();
             for (int i = 0; i < confs.length; i++) {
@@ -483,8 +431,8 @@ public final class Main {
 
                 all.addAll(Arrays.asList(parser.getArtifactReports()));
             }
-            for (Iterator iter = all.iterator(); iter.hasNext();) {
-                ArtifactDownloadReport artifact = (ArtifactDownloadReport) iter.next();
+            for (ArtifactDownloadReport artifactDownloadReport : all) {
+                ArtifactDownloadReport artifact = artifactDownloadReport;
                 if (artifact.getLocalFile() != null) {
                     buf.append(artifact.getLocalFile().getCanonicalPath());
                     buf.append(pathSeparator);
@@ -499,18 +447,18 @@ public final class Main {
             System.out.println("cachepath output to " + outFile);
 
         } catch (Exception ex) {
-            throw new RuntimeException("impossible to build ivy cache path: " + ex.getMessage(), ex);
+            throw new RuntimeException("impossible to build ivy cache path: " + ex.getMessage(),
+                    ex);
         }
     }
 
     private static void invoke(Ivy ivy, File cache, ModuleDescriptor md, String[] confs,
-            List fileList, String mainclass, String[] args) {
-        List urls = new ArrayList();
+            List<File> fileList, String mainclass, String[] args) {
+        List<URL> urls = new ArrayList<URL>();
 
         // Add option cp (extra classpath) urls
-        if (fileList != null && fileList.size() > 0) {
-            for (Iterator iter = fileList.iterator(); iter.hasNext();) {
-                File file = (File) iter.next();
+        if (fileList != null) {
+            for (File file : fileList) {
                 try {
                     urls.add(file.toURI().toURL());
                 } catch (MalformedURLException e) {
@@ -520,37 +468,35 @@ public final class Main {
         }
 
         try {
-            Collection all = new LinkedHashSet();
+            Collection<ArtifactDownloadReport> all = new LinkedHashSet<ArtifactDownloadReport>();
             ResolutionCacheManager cacheMgr = ivy.getResolutionCacheManager();
             XmlReportParser parser = new XmlReportParser();
-            for (int i = 0; i < confs.length; i++) {
+            for (String conf : confs) {
                 String resolveId = ResolveOptions.getDefaultResolveId(md);
-                File report = cacheMgr.getConfigurationResolveReportInCache(resolveId, confs[i]);
+                File report = cacheMgr.getConfigurationResolveReportInCache(resolveId, conf);
                 parser.parse(report);
-
-                all.addAll(Arrays.asList(parser.getArtifactReports()));
+                Collections.addAll(all, parser.getArtifactReports());
             }
-            for (Iterator iter = all.iterator(); iter.hasNext();) {
-                ArtifactDownloadReport artifact = (ArtifactDownloadReport) iter.next();
-
+            for (ArtifactDownloadReport artifact : all) {
                 if (artifact.getLocalFile() != null) {
                     urls.add(artifact.getLocalFile().toURI().toURL());
                 }
             }
         } catch (Exception ex) {
-            throw new RuntimeException("impossible to build ivy cache path: " + ex.getMessage(), ex);
+            throw new RuntimeException("impossible to build ivy cache path: " + ex.getMessage(),
+                    ex);
         }
 
-        URLClassLoader classLoader = new URLClassLoader((URL[]) urls.toArray(new URL[urls.size()]),
+        URLClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]),
                 Main.class.getClassLoader());
 
         try {
-            Class c = classLoader.loadClass(mainclass);
+            Class<?> c = classLoader.loadClass(mainclass);
 
-            Method mainMethod = c.getMethod("main", new Class[] {String[].class});
+            Method mainMethod = c.getMethod("main", String[].class);
 
             Thread.currentThread().setContextClassLoader(classLoader);
-            mainMethod.invoke(null, new Object[] {(args == null ? new String[0] : args)});
+            mainMethod.invoke(null, (Object) (args == null ? new String[0] : args));
         } catch (ClassNotFoundException cnfe) {
             throw new RuntimeException("Could not find class: " + mainclass, cnfe);
         } catch (SecurityException e) {
@@ -560,7 +506,13 @@ public final class Main {
         } catch (IllegalAccessException e) {
             throw new RuntimeException("No permissions to invoke main method: " + mainclass, e);
         } catch (InvocationTargetException e) {
-            throw new RuntimeException("Unexpected exception invoking main method: " + mainclass, e);
+            throw new RuntimeException("Unexpected exception invoking main method: " + mainclass,
+                    e);
+        } finally {
+            try {
+                classLoader.close();
+            } catch (IOException e2) {
+            }
         }
     }
 

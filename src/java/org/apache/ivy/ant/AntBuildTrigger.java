@@ -20,7 +20,6 @@ package org.apache.ivy.ant;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.ivy.core.IvyContext;
@@ -62,7 +61,7 @@ public class AntBuildTrigger extends AbstractTrigger implements Trigger {
 
     private String target = null;
 
-    private Collection builds = new ArrayList();
+    private Collection<String> builds = new ArrayList<String>();
 
     private String buildFilePattern;
 
@@ -75,8 +74,7 @@ public class AntBuildTrigger extends AbstractTrigger implements Trigger {
                 Message.verbose("target build file already built, skipping: " + f);
             } else {
                 Ant ant = new Ant();
-                Project project = (Project) IvyContext
-                        .peekInContextStack(IvyTask.ANT_PROJECT_CONTEXT_KEY);
+                Project project = IvyContext.peekInContextStack(IvyTask.ANT_PROJECT_CONTEXT_KEY);
                 if (project == null) {
                     project = new Project();
                     project.init();
@@ -91,14 +89,12 @@ public class AntBuildTrigger extends AbstractTrigger implements Trigger {
                 if (target != null) {
                     ant.setTarget(target);
                 }
-                Map atts = event.getAttributes();
-                for (Iterator iter = atts.keySet().iterator(); iter.hasNext();) {
-                    String key = (String) iter.next();
-                    String value = (String) atts.get(key);
-                    if (value != null) {
+                Map<String, String> atts = event.getAttributes();
+                for (Map.Entry<String, String> e : atts.entrySet()) {
+                    if (e.getValue() != null) {
                         Property p = ant.createProperty();
-                        p.setName(prefix == null ? key : prefix + key);
-                        p.setValue(value);
+                        p.setName(prefix == null ? "" : prefix + e.getKey());
+                        p.setValue(e.getValue());
                     }
                 }
 
@@ -111,8 +107,8 @@ public class AntBuildTrigger extends AbstractTrigger implements Trigger {
                 }
                 markBuilt(f);
 
-                Message.debug("triggered build finished: " + f + " target=" + target + " for "
-                        + event);
+                Message.debug(
+                    "triggered build finished: " + f + " target=" + target + " for " + event);
             }
         } else {
             Message.verbose("no build file found for dependency, skipping: " + f);
@@ -128,11 +124,8 @@ public class AntBuildTrigger extends AbstractTrigger implements Trigger {
     }
 
     private File getBuildFile(IvyEvent event) {
-        return IvyContext
-                .getContext()
-                .getSettings()
-                .resolveFile(
-                    IvyPatternHelper.substituteTokens(getBuildFilePattern(), event.getAttributes()));
+        return IvyContext.getContext().getSettings().resolveFile(
+            IvyPatternHelper.substituteTokens(getBuildFilePattern(), event.getAttributes()));
     }
 
     public String getBuildFilePattern() {

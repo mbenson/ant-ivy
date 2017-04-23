@@ -23,9 +23,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -199,8 +199,8 @@ public class IvyBuildList extends IvyTask {
         for (FileSet fs : buildFileSets) {
             DirectoryScanner ds = fs.getDirectoryScanner(getProject());
             String[] builds = ds.getIncludedFiles();
-            for (int i = 0; i < builds.length; i++) {
-                File buildFile = new File(ds.getBasedir(), builds[i]);
+            for (String build : builds) {
+                File buildFile = new File(ds.getBasedir(), build);
                 File ivyFile = getIvyFileFor(buildFile);
                 if (!ivyFile.exists()) {
                     onMissingDescriptor(buildFile, ivyFile, noDescriptor);
@@ -214,14 +214,13 @@ public class IvyBuildList extends IvyTask {
                         Message.debug("Add " + md.getModuleRevisionId().getModuleId());
                     } catch (Exception ex) {
                         if (haltOnError) {
-                            throw new BuildException("impossible to parse ivy file for "
-                                    + buildFile + ": ivyfile=" + ivyFile + " exception=" + ex, ex);
-                        } else {
-                            Message.warn("impossible to parse ivy file for " + buildFile
-                                    + ": ivyfile=" + ivyFile + " exception=" + ex.getMessage());
-                            Message.info("\t=> adding it at the beginning of the path");
-                            independent.add(buildFile);
+                            throw new BuildException("impossible to parse ivy file for " + buildFile
+                                    + ": ivyfile=" + ivyFile + " exception=" + ex, ex);
                         }
+                        Message.warn("impossible to parse ivy file for " + buildFile + ": ivyfile="
+                                + ivyFile + " exception=" + ex.getMessage());
+                        Message.info("\t=> adding it at the beginning of the path");
+                        independent.add(buildFile);
                     }
                 }
             }
@@ -273,8 +272,8 @@ public class IvyBuildList extends IvyTask {
             }
             sortedModules = keptModules;
         }
-        StringBuffer order = new StringBuffer();
-        for (ListIterator<ModuleDescriptor> iter = sortedModules.listIterator(); iter.hasNext();) {
+        StringBuilder order = new StringBuilder();
+        for (Iterator<ModuleDescriptor> iter = sortedModules.iterator(); iter.hasNext();) {
             ModuleDescriptor md = iter.next();
             order.append(md.getModuleRevisionId().getModuleId());
             if (iter.hasNext()) {
@@ -305,13 +304,9 @@ public class IvyBuildList extends IvyTask {
                 Message.warn("a module has no module descriptor. " + "Build file: " + buildFile
                         + ". Expected descriptor: " + ivyFile);
             }
-            Message.verbose("no descriptor for "
-                    + buildFile
-                    + ": descriptor="
-                    + ivyFile
-                    + ": adding it at the "
-                    + (OnMissingDescriptor.TAIL.equals(onMissingDescriptor) ? "tail" : "head"
-                            + " of the path"));
+            Message.verbose("no descriptor for " + buildFile + ": descriptor=" + ivyFile
+                    + ": adding it at the " + (OnMissingDescriptor.TAIL.equals(onMissingDescriptor)
+                            ? "tail" : "head" + " of the path"));
             Message.verbose("\t(change onMissingDescriptor if you want to take another action");
             noDescriptor.add(buildFile);
         }
@@ -334,7 +329,7 @@ public class IvyBuildList extends IvyTask {
             Set<String> missingModules = new HashSet<String>(moduleNames);
             missingModules.removeAll(foundModuleNames);
 
-            StringBuffer missingNames = new StringBuffer();
+            StringBuilder missingNames = new StringBuilder();
             String sep = "";
             for (String name : missingModules) {
                 missingNames.append(sep);
@@ -374,8 +369,8 @@ public class IvyBuildList extends IvyTask {
             // With the excluderoot attribute set to true, take the rootmd out of the toKeep set.
             if (excludeRoot) {
                 // Only for logging purposes
-                Message.verbose("Excluded module "
-                        + rootmd.getModuleRevisionId().getModuleId().getName());
+                Message.verbose(
+                    "Excluded module " + rootmd.getModuleRevisionId().getModuleId().getName());
             } else {
                 toKeep.add(rootmd);
             }
@@ -406,8 +401,8 @@ public class IvyBuildList extends IvyTask {
         // toKeep.add(node);
 
         DependencyDescriptor[] deps = node.getDependencies();
-        for (int i = 0; i < deps.length; i++) {
-            ModuleId id = deps[i].getDependencyId();
+        for (DependencyDescriptor dep : deps) {
+            ModuleId id = dep.getDependencyId();
             ModuleDescriptor md = moduleIdMap.get(id);
             // we test if this module id has a module descriptor, and if it isn't already in the
             // toKeep Set, in which there's probably a circular dependency
@@ -442,8 +437,8 @@ public class IvyBuildList extends IvyTask {
         for (ModuleDescriptor leafmd : leafmds) {
             // With the excludeleaf attribute set to true, take the rootmd out of the toKeep set.
             if (excludeLeaf) {
-                Message.verbose("Excluded module "
-                        + leafmd.getModuleRevisionId().getModuleId().getName());
+                Message.verbose(
+                    "Excluded module " + leafmd.getModuleRevisionId().getModuleId().getName());
             } else {
                 toKeep.add(leafmd);
             }
@@ -454,7 +449,6 @@ public class IvyBuildList extends IvyTask {
         for (ModuleDescriptor md : toKeep) {
             Message.verbose("Kept module " + md.getModuleRevisionId().getModuleId().getName());
         }
-
         return toKeep;
     }
 
@@ -473,8 +467,8 @@ public class IvyBuildList extends IvyTask {
             Map<ModuleId, ModuleDescriptor> moduleIdMap) {
         for (ModuleDescriptor md : moduleIdMap.values()) {
             DependencyDescriptor[] deps = md.getDependencies();
-            for (int i = 0; i < deps.length; i++) {
-                ModuleId id = deps[i].getDependencyId();
+            for (DependencyDescriptor dep : deps) {
+                ModuleId id = dep.getDependencyId();
                 if (node.getModuleRevisionId().getModuleId().equals(id) && !toKeep.contains(md)) {
                     toKeep.add(md);
                     if (!getOnlydirectdep()) {

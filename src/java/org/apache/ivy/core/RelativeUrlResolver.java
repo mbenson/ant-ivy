@@ -55,13 +55,12 @@ public abstract class RelativeUrlResolver {
             File f = new File(file);
             if (f.isAbsolute()) {
                 return f.toURI().toURL();
-            } else {
-                return getURL(context, file);
             }
-        } else if (url != null) {
-            return getURL(context, url);
-        } else {
+            return getURL(context, file);
+        }
+        if (url == null) {
             return null;
         }
+        return getURL(context, url);
     }
 }

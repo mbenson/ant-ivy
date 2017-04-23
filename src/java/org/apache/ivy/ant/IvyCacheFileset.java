@@ -29,6 +29,7 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.PatternSet.NameEntry;
+import org.apache.tools.ant.types.Resource;
 
 /**
  * Creates an ant fileset consisting in all artifacts found during a resolve. Note that this task is
@@ -48,9 +49,7 @@ public class IvyCacheFileset extends IvyCacheTask {
     public void setUseOrigin(boolean useOrigin) {
         if (useOrigin) {
             throw new UnsupportedOperationException(
-                    "the cachefileset task does not support the useOrigin mode, since filesets "
-                            + "require to have only one root directory. Please use the the cachepath "
-                            + "task instead");
+                    "the cachefileset task does not support the useOrigin mode, since filesets require to have only one root directory. Please use the the cachepath task instead");
         }
     }
 
@@ -60,12 +59,11 @@ public class IvyCacheFileset extends IvyCacheTask {
             throw new BuildException("setid is required in ivy cachefileset");
         }
         try {
-            List paths = getArtifactReports();
+            List<ArtifactDownloadReport> paths = getArtifactReports();
             File base = null;
-            for (Iterator iter = paths.iterator(); iter.hasNext();) {
-                ArtifactDownloadReport a = (ArtifactDownloadReport) iter.next();
-                if (a.getLocalFile() != null) {
-                    base = getBaseDir(base, a.getLocalFile());
+            for (ArtifactDownloadReport artifactDownloadReport : paths) {
+                if (artifactDownloadReport.getLocalFile() != null) {
+                    base = getBaseDir(base, artifactDownloadReport.getLocalFile());
                 }
             }
 
@@ -75,11 +73,10 @@ public class IvyCacheFileset extends IvyCacheTask {
             } else {
                 fileset = new FileSet();
                 fileset.setDir(base);
-                for (Iterator iter = paths.iterator(); iter.hasNext();) {
-                    ArtifactDownloadReport a = (ArtifactDownloadReport) iter.next();
-                    if (a.getLocalFile() != null) {
+                for (ArtifactDownloadReport artifactDownloadReport : paths) {
+                    if (artifactDownloadReport.getLocalFile() != null) {
                         NameEntry ne = fileset.createInclude();
-                        ne.setName(getPath(base, a.getLocalFile()));
+                        ne.setName(getPath(base, artifactDownloadReport.getLocalFile()));
                     }
                 }
             }
@@ -108,7 +105,7 @@ public class IvyCacheFileset extends IvyCacheTask {
         // checks if the basePath ends with the file separator (which can for instance
         // happen if the basePath is the root on unix)
         if (!absoluteBasePath.endsWith(File.separator)) {
-            beginIndex++; // skip the seperator char as well
+            beginIndex++; // skip the separator char as well
         }
 
         return file.getAbsolutePath().substring(beginIndex);
@@ -129,27 +126,26 @@ public class IvyCacheFileset extends IvyCacheTask {
     File getBaseDir(File base, File file) {
         if (base == null) {
             return file.getParentFile().getAbsoluteFile();
-        } else {
-            Iterator bases = getParents(base).iterator();
-            Iterator fileParents = getParents(file.getAbsoluteFile()).iterator();
-            File result = null;
-            while (bases.hasNext() && fileParents.hasNext()) {
-                File next = (File) bases.next();
-                if (next.equals(fileParents.next())) {
-                    result = next;
-                } else {
-                    break;
-                }
-            }
-            return result;
         }
+        Iterator<File> bases = getParents(base).iterator();
+        Iterator<File> fileParents = getParents(file.getAbsoluteFile()).iterator();
+        File result = null;
+        while (bases.hasNext() && fileParents.hasNext()) {
+            File next = bases.next();
+            if (next.equals(fileParents.next())) {
+                result = next;
+            } else {
+                break;
+            }
+        }
+        return result;
     }
 
     /**
      * @return a list of files, starting with the root and ending with the file itself
      */
-    private LinkedList/* <File> */getParents(File file) {
-        LinkedList r = new LinkedList();
+    private List<File> getParents(File file) {
+        LinkedList<File> r = new LinkedList<File>();
         while (file != null) {
             r.addFirst(file);
             file = file.getParentFile();
@@ -161,8 +157,8 @@ public class IvyCacheFileset extends IvyCacheTask {
 
         private DirectoryScanner ds = new EmptyDirectoryScanner();
 
-        public Iterator iterator() {
-            return new EmptyIterator();
+        public Iterator<Resource> iterator() {
+            return new EmptyIterator<Resource>();
         }
 
         public Object clone() {
@@ -178,13 +174,13 @@ public class IvyCacheFileset extends IvyCacheTask {
         }
     }
 
-    private static class EmptyIterator implements Iterator {
+    private static class EmptyIterator<T> implements Iterator<T> {
 
         public boolean hasNext() {
             return false;
         }
 
-        public Object next() {
+        public T next() {
             throw new NoSuchElementException("EmptyFileSet Iterator");
         }
 

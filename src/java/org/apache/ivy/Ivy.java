@@ -120,7 +120,7 @@ public class Ivy {
      * 
      * @see Ivy#execute(org.apache.ivy.Ivy.IvyCallback)
      */
-    public static interface IvyCallback {
+    public interface IvyCallback {
         /**
          * Executes Ivy related job within an {@link IvyContext}
          * 
@@ -130,7 +130,7 @@ public class Ivy {
          *            the {@link IvyContext} in which this callback is executed
          * @return the result of this job, <code>null</code> if there is no result
          */
-        public Object doInIvyContext(Ivy ivy, IvyContext context);
+        Object doInIvyContext(Ivy ivy, IvyContext context);
     }
 
     private static final int KILO = 1024;
@@ -315,15 +315,15 @@ public class Ivy {
                     switch (evt.getEventType()) {
                         case TransferEvent.TRANSFER_PROGRESS:
                             resolve = IvyContext.getContext().getResolveData();
-                            if (resolve == null
-                                    || !LogOptions.LOG_QUIET.equals(resolve.getOptions().getLog())) {
+                            if (resolve == null || !LogOptions.LOG_QUIET
+                                    .equals(resolve.getOptions().getLog())) {
                                 Message.progress();
                             }
                             break;
                         case TransferEvent.TRANSFER_COMPLETED:
                             resolve = IvyContext.getContext().getResolveData();
-                            if (resolve == null
-                                    || !LogOptions.LOG_QUIET.equals(resolve.getOptions().getLog())) {
+                            if (resolve == null || !LogOptions.LOG_QUIET
+                                    .equals(resolve.getOptions().getLog())) {
                                 Message.endProgress(" (" + (evt.getTotalLength() / KILO) + "kB)");
                             }
                             break;
@@ -502,8 +502,8 @@ public class Ivy {
         }
     }
 
-    public ResolveReport resolve(URL ivySource, ResolveOptions options) throws ParseException,
-            IOException {
+    public ResolveReport resolve(URL ivySource, ResolveOptions options)
+            throws ParseException, IOException {
         pushContext();
         try {
             return resolveEngine.resolve(ivySource, options);
@@ -512,8 +512,8 @@ public class Ivy {
         }
     }
 
-    public ResolveReport resolve(File ivySource, ResolveOptions options) throws ParseException,
-            IOException {
+    public ResolveReport resolve(File ivySource, ResolveOptions options)
+            throws ParseException, IOException {
         return resolve(ivySource.toURI().toURL(), options);
     }
 
@@ -545,6 +545,7 @@ public class Ivy {
     // RETRIEVE
     // ///////////////////////////////////////////////////////////////////////
 
+    @Deprecated
     public int retrieve(ModuleRevisionId mrid, String destFilePattern, RetrieveOptions options)
             throws IOException {
         pushContext();

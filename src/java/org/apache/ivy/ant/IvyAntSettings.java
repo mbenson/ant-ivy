@@ -115,30 +115,30 @@ public class IvyAntSettings extends DataType {
     public static IvyAntSettings getDefaultInstance(ProjectComponent task) {
         Project project = task.getProject();
         Object defaultInstanceObj = project.getReference("ivy.instance");
-        if (defaultInstanceObj != null
-                && defaultInstanceObj.getClass().getClassLoader() != IvyAntSettings.class
-                        .getClassLoader()) {
-            task.log("ivy.instance reference an ivy:settings defined in an other classloader.  "
-                    + "An new default one will be used in this project.", Project.MSG_WARN);
+        if (defaultInstanceObj != null && defaultInstanceObj.getClass()
+                .getClassLoader() != IvyAntSettings.class.getClassLoader()) {
+            task.log(
+                "ivy.instance reference an ivy:settings defined in an other classloader. A new default one will be used in this project.",
+                Project.MSG_WARN);
             defaultInstanceObj = null;
         }
         if (defaultInstanceObj != null && !(defaultInstanceObj instanceof IvyAntSettings)) {
-            throw new BuildException("ivy.instance reference a "
-                    + defaultInstanceObj.getClass().getName()
-                    + " an not an IvyAntSettings.  Please don't use this reference id ()");
+            throw new BuildException(
+                    "ivy.instance reference a " + defaultInstanceObj.getClass().getName()
+                            + " an not an IvyAntSettings.  Please don't use this reference id ()");
         }
         if (defaultInstanceObj == null) {
-            task.log("No ivy:settings found for the default reference 'ivy.instance'.  "
-                    + "A default instance will be used", Project.MSG_VERBOSE);
+            task.log(
+                "No ivy:settings found for the default reference 'ivy.instance'. A default instance will be used",
+                Project.MSG_VERBOSE);
 
             IvyAntSettings settings = new IvyAntSettings();
             settings.setProject(project);
             project.addReference("ivy.instance", settings);
             settings.createIvyEngine(task);
             return settings;
-        } else {
-            return (IvyAntSettings) defaultInstanceObj;
         }
+        return (IvyAntSettings) defaultInstanceObj;
     }
 
     /*
@@ -296,8 +296,7 @@ public class IvyAntSettings extends DataType {
             } else {
                 if (url == null) {
                     throw new AssertionError(
-                            "ivy setting should have either a file, either an url,"
-                                    + " and if not defineDefaultSettingFile must set it.");
+                            "ivy setting should have either a file, either an url, and if not defineDefaultSettingFile must set it.");
                 }
                 ivy.configure(url);
             }
@@ -349,12 +348,11 @@ public class IvyAntSettings extends DataType {
         } else {
             settingsFileName = variableContainer.getVariable("ivy.settings.file");
         }
-        File[] settingsLocations = new File[] {
-                new File(getProject().getBaseDir(), settingsFileName),
+        File[] settingsLocations = {new File(getProject().getBaseDir(), settingsFileName),
                 new File(getProject().getBaseDir(), "ivyconf.xml"), new File(settingsFileName),
                 new File("ivyconf.xml")};
-        for (int i = 0; i < settingsLocations.length; i++) {
-            file = settingsLocations[i];
+        for (File settingsLocation : settingsLocations) {
+            file = settingsLocation;
             task.log("searching settings file: trying " + file, Project.MSG_VERBOSE);
             if (file.exists()) {
                 break;
@@ -373,7 +371,8 @@ public class IvyAntSettings extends DataType {
                     } catch (MalformedURLException e) {
                         throw new BuildException(
                                 "Impossible to configure ivy:settings with given url: "
-                                        + settingsFileUrl + ": " + e.getMessage(), e);
+                                        + settingsFileUrl + ": " + e.getMessage(),
+                                e);
                     }
                 } else {
                     task.log("no settings file found, using default...", Project.MSG_VERBOSE);

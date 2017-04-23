@@ -18,9 +18,7 @@
 package org.apache.ivy.ant;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.ivy.core.settings.IvyVariableContainer;
 import org.apache.ivy.core.settings.IvyVariableContainerImpl;
@@ -30,7 +28,7 @@ import org.apache.tools.ant.taskdefs.Property;
 
 class IvyAntVariableContainer extends IvyVariableContainerImpl implements IvyVariableContainer {
 
-    private Map overwrittenProperties = new HashMap();
+    private Map<String, String> overwrittenProperties = new HashMap<String, String>();
 
     private Project project;
 
@@ -39,7 +37,7 @@ class IvyAntVariableContainer extends IvyVariableContainerImpl implements IvyVar
     }
 
     public String getVariable(String name) {
-        String r = (String) overwrittenProperties.get(name);
+        String r = overwrittenProperties.get(name);
         if (r == null) {
             r = project.getProperty(name);
         }
@@ -64,7 +62,8 @@ class IvyAntVariableContainer extends IvyVariableContainerImpl implements IvyVar
      * All variables defined in Ivy will be set in the Ant project under two names:
      * <ul>
      * <li>the name of the variable</li>
-     * <li>the name of the variable suffxied with a dot + the given id, if the given id is not null</li>
+     * <li>the name of the variable suffxied with a dot + the given id, if the given id is not
+     * null</li>
      * </ul>
      * 
      * @param id
@@ -72,14 +71,12 @@ class IvyAntVariableContainer extends IvyVariableContainerImpl implements IvyVar
      *            be used as property names suffix
      */
     public void updateProject(String id) {
-        Map r = new HashMap(super.getVariables());
+        Map<String, String> r = new HashMap<String, String>(super.getVariables());
         r.putAll(overwrittenProperties);
-        for (Iterator it = r.entrySet().iterator(); it.hasNext();) {
-            Entry entry = (Entry) it.next();
-
-            setPropertyIfNotSet((String) entry.getKey(), (String) entry.getValue());
+        for (Map.Entry<String, String> entry : r.entrySet()) {
+            setPropertyIfNotSet(entry.getKey(), entry.getValue());
             if (id != null) {
-                setPropertyIfNotSet((String) entry.getKey() + "." + id, (String) entry.getValue());
+                setPropertyIfNotSet(entry.getKey() + "." + id, entry.getValue());
             }
         }
 
@@ -98,9 +95,9 @@ class IvyAntVariableContainer extends IvyVariableContainerImpl implements IvyVar
         }
     }
 
-    public Object clone() {
+    public IvyAntVariableContainer clone() {
         IvyAntVariableContainer result = (IvyAntVariableContainer) super.clone();
-        result.overwrittenProperties = (HashMap) ((HashMap) this.overwrittenProperties).clone();
+        result.overwrittenProperties = new HashMap<String, String>(overwrittenProperties);
         return result;
     }
 }
