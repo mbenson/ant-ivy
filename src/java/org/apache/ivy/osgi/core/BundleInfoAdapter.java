@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.jar.Manifest;
 
@@ -99,9 +98,9 @@ public class BundleInfoAdapter {
 
         Set<String> exportedPkgNames = new HashSet<String>(bundle.getExports().size());
         for (ExportPackage exportPackage : bundle.getExports()) {
-            md.getExtraInfos().add(
-                new ExtraInfoHolder(EXTRA_INFO_EXPORT_PREFIX + exportPackage.getName(),
-                        exportPackage.getVersion().toString()));
+            md.getExtraInfos()
+                    .add(new ExtraInfoHolder(EXTRA_INFO_EXPORT_PREFIX + exportPackage.getName(),
+                            exportPackage.getVersion().toString()));
             exportedPkgNames.add(exportPackage.getName());
             String[] confDependencies = new String[exportPackage.getUses().size() + 1];
             int i = 0;
@@ -148,18 +147,19 @@ public class BundleInfoAdapter {
             for (String env : bundle.getExecutionEnvironments()) {
                 ExecutionEnvironmentProfile profile = profileProvider.getProfile(env);
                 if (profile == null) {
-                    throw new ProfileNotFoundException("Execution environment profile " + env
-                            + " not found");
+                    throw new ProfileNotFoundException(
+                            "Execution environment profile " + env + " not found");
                 }
                 for (String pkg : profile.getPkgNames()) {
-                    ArtifactId id = new ArtifactId(ModuleId.newInstance(BundleInfo.PACKAGE_TYPE,
-                        pkg), PatternMatcher.ANY_EXPRESSION, PatternMatcher.ANY_EXPRESSION,
+                    ArtifactId id = new ArtifactId(
+                            ModuleId.newInstance(BundleInfo.PACKAGE_TYPE, pkg),
+                            PatternMatcher.ANY_EXPRESSION, PatternMatcher.ANY_EXPRESSION,
                             PatternMatcher.ANY_EXPRESSION);
                     DefaultExcludeRule rule = new DefaultExcludeRule(id,
                             ExactOrRegexpPatternMatcher.INSTANCE, null);
                     String[] confs = md.getConfigurationsNames();
-                    for (int i = 0; i < confs.length; i++) {
-                        rule.addConfiguration(confs[i]);
+                    for (String conf : confs) {
+                        rule.addConfiguration(conf);
                     }
                     md.addExcludeRule(rule);
                 }
@@ -167,9 +167,9 @@ public class BundleInfoAdapter {
         }
 
         if (manifest != null) {
-            for (Entry<Object, Object> entries : manifest.getMainAttributes().entrySet()) {
-                md.addExtraInfo(new ExtraInfoHolder(entries.getKey().toString(), entries.getValue()
-                        .toString()));
+            for (Map.Entry<Object, Object> entries : manifest.getMainAttributes().entrySet()) {
+                md.addExtraInfo(new ExtraInfoHolder(entries.getKey().toString(),
+                        entries.getValue().toString()));
             }
         }
 
@@ -190,8 +190,8 @@ public class BundleInfoAdapter {
                 extraAtt.put("packaging", packaging);
             }
             try {
-                artifact = new DefaultArtifact(mrid, null, mrid.getName(), type, ext, new URL(
-                        uri.toString()), extraAtt);
+                artifact = new DefaultArtifact(mrid, null, mrid.getName(), type, ext,
+                        new URL(uri.toString()), extraAtt);
             } catch (MalformedURLException e) {
                 throw new RuntimeException("Unable to make the uri into the url", e);
             }
@@ -220,12 +220,8 @@ public class BundleInfoAdapter {
 
     private static URI asIvyURI(String org, String name, String branch, String rev, String type,
             String art, String ext) {
-        StringBuffer builder = new StringBuffer();
-        builder.append("ivy:///");
-        builder.append(org);
-        builder.append('/');
-        builder.append(name);
-        builder.append('?');
+        StringBuilder builder = new StringBuilder().append("ivy:///").append(org).append('/')
+                .append(name).append('?');
         if (branch != null) {
             builder.append("branch=");
             builder.append(branch);
@@ -254,16 +250,8 @@ public class BundleInfoAdapter {
     }
 
     private static DefaultArtifact decodeIvyURI(final URI uri) {
-        String org = null;
-        String name = null;
-        String branch = null;
-        String rev = null;
-        String art = null;
-        String type = null;
-        String ext = null;
-
         String path = uri.getPath();
-        if (!path.startsWith("/")) {
+        if (path.charAt(0) != '/') {
             throw new IllegalArgumentException(
                     "An ivy url should be of the form ivy:///org/module but was : " + uri);
         }
@@ -271,28 +259,34 @@ public class BundleInfoAdapter {
         if (i < 0) {
             throw new IllegalArgumentException("Expecting an organisation in the ivy url: " + uri);
         }
-        org = path.substring(1, i);
-        name = path.substring(i + 1);
+        String org = path.substring(1, i);
+        String name = path.substring(i + 1);
 
         String query = uri.getQuery();
-        String[] parameters = query.split("&");
-        for (int j = 0; j < parameters.length; j++) {
-            String parameter = parameters[j];
+
+        String branch = null;
+        String rev = null;
+        String art = null;
+        String type = null;
+        String ext = null;
+
+        for (String parameter : query.split("&")) {
             if (parameter.length() == 0) {
                 continue;
             }
             String[] nameAndValue = parameter.split("=");
             if (nameAndValue.length != 2) {
                 throw new IllegalArgumentException("Malformed query string in the ivy url: " + uri);
-            } else if (nameAndValue[0].equals("branch")) {
+            }
+            if ("branch".equals(nameAndValue[0])) {
                 branch = nameAndValue[1];
-            } else if (nameAndValue[0].equals("rev")) {
+            } else if ("rev".equals(nameAndValue[0])) {
                 rev = nameAndValue[1];
-            } else if (nameAndValue[0].equals("art")) {
+            } else if ("art".equals(nameAndValue[0])) {
                 art = nameAndValue[1];
-            } else if (nameAndValue[0].equals("type")) {
+            } else if ("type".equals(nameAndValue[0])) {
                 type = nameAndValue[1];
-            } else if (nameAndValue[0].equals("ext")) {
+            } else if ("ext".equals(nameAndValue[0])) {
                 ext = nameAndValue[1];
             } else {
                 throw new IllegalArgumentException("Unrecognized parameter '" + nameAndValue[0]
@@ -361,6 +355,7 @@ public class BundleInfoAdapter {
     }
 
     public static class ProfileNotFoundException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
 
         public ProfileNotFoundException(String msg) {
             super(msg);

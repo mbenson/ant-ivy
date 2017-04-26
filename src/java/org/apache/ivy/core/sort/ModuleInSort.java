@@ -34,7 +34,8 @@ import org.apache.ivy.util.Message;
  * ModuleInSort can be used in only one ModuleDescriptorSorter at a time.<br>
  * The added fields are : <br>
  * <ul>
- * <li><code>isSorted</code> : is true iff this module has already been added to the sorted list.</li>
+ * <li><code>isSorted</code> : is true iff this module has already been added to the sorted
+ * list.</li>
  * <li><code>loopElements</code> : When the module is the root of a loop (=the first element of a
  * loop met during the sort), <code>loopElements</code> contains all ModuleInSort of the loop
  * (excluding the root itself.</li>
@@ -66,12 +67,11 @@ class ModuleInSort {
     /** This ModuleInSort has been placed on the sorted list */
     public boolean isSorted() {
         if (isSorted) {
-            Message.debug("Module descriptor already sorted : "
-                    + module.getModuleRevisionId().toString());
+            Message.debug(
+                "Module descriptor already sorted : " + module.getModuleRevisionId().toString());
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -81,12 +81,11 @@ class ModuleInSort {
      */
     public boolean isProcessed() {
         if (isSorted || isLoopIntermediateElement) {
-            Message.debug("Module descriptor is processed : "
-                    + module.getModuleRevisionId().toString());
+            Message.debug(
+                "Module descriptor is processed : " + module.getModuleRevisionId().toString());
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     public void setCaller(ModuleInSort caller) {
@@ -120,9 +119,8 @@ class ModuleInSort {
             ModuleRevisionId[] mrids = elemOfLoop.toArray(new ModuleRevisionId[elemOfLoop.size()]);
             depStrategy.handleCircularDependency(mrids);
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -162,7 +160,7 @@ class ModuleInSort {
     }
 
     /** Log a warning saying that a loop is detected */
-    public static void logLoopWarning(List loopElement) {
+    public static void logLoopWarning(List<ModuleDescriptor> loopElement) {
         Message.warn("circular dependency detected during sort: "
                 + CircularDependencyHelper.formatMessageFromDescriptors(loopElement));
     }

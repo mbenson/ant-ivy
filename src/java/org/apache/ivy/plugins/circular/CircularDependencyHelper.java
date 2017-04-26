@@ -18,7 +18,6 @@
 package org.apache.ivy.plugins.circular;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +28,6 @@ public final class CircularDependencyHelper {
 
     /** CircularDependencyHelper is not designed to be an instance */
     private CircularDependencyHelper() {
-
     }
 
     /**
@@ -40,8 +38,8 @@ public final class CircularDependencyHelper {
      * @return a string representation of this circular dependency graph
      */
     public static String formatMessage(final ModuleRevisionId[] mrids) {
-        Set alreadyAdded = new HashSet();
-        StringBuffer buff = new StringBuffer();
+        Set<ModuleRevisionId> alreadyAdded = new HashSet<ModuleRevisionId>();
+        StringBuilder buff = new StringBuilder();
         buff.append(mrids[0]);
         alreadyAdded.add(mrids[0]);
         for (int i = 1; i < mrids.length; i++) {
@@ -64,13 +62,11 @@ public final class CircularDependencyHelper {
      * @param loopElements
      *            a List<ModuleDescriptor>
      */
-    public static String formatMessageFromDescriptors(List loopElements) {
+    public static String formatMessageFromDescriptors(List<ModuleDescriptor> loopElements) {
         ModuleRevisionId[] mrids = new ModuleRevisionId[loopElements.size()];
         int pos = 0;
-        for (Iterator it = loopElements.iterator(); it.hasNext();) {
-            ModuleDescriptor descriptor = (ModuleDescriptor) it.next();
-            mrids[pos] = descriptor.getModuleRevisionId();
-            pos++;
+        for (ModuleDescriptor descriptor : loopElements) {
+            mrids[pos++] = descriptor.getModuleRevisionId();
         }
         return formatMessage(mrids);
     }

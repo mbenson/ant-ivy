@@ -82,7 +82,7 @@ public class BundleInfo {
     }
 
     public String toString() {
-        StringBuffer builder = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         builder.append("BundleInfo [executionEnvironments=");
         builder.append(executionEnvironments);
         builder.append(", capabilities=");

@@ -82,10 +82,8 @@ public class SortEngine {
         List<IvyNode> ret = new ArrayList<IvyNode>(
                 (int) (list.size() * adjustFactor + nulls.size()));
         // attempt to adjust the size to avoid too much list resizing
-        for (int i = 0; i < list.size(); i++) {
-            ModuleDescriptor md = list.get(i);
-            List<IvyNode> n = dependenciesMap.get(md);
-            ret.addAll(n);
+        for (ModuleDescriptor md : list) {
+            ret.addAll(dependenciesMap.get(md));
         }
         ret.addAll(0, nulls);
         return ret;

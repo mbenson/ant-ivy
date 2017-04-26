@@ -34,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.ivy.Ivy;
@@ -225,15 +224,15 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         String ivyTypeDefs = System.getProperty("ivy.typedef.files");
         if (ivyTypeDefs != null) {
             String[] files = ivyTypeDefs.split("\\,");
-            for (int i = 0; i < files.length; i++) {
+            for (String file : files) {
                 try {
                     typeDefs(
-                        new FileInputStream(Checks.checkAbsolute(files[i].trim(),
-                            "ivy.typedef.files")), true);
+                        new FileInputStream(Checks.checkAbsolute(file.trim(), "ivy.typedef.files")),
+                        true);
                 } catch (FileNotFoundException e) {
-                    Message.warn("typedefs file not found: " + files[i].trim());
+                    Message.warn("typedefs file not found: " + file.trim());
                 } catch (IOException e) {
-                    Message.warn("problem with typedef file: " + files[i].trim(), e);
+                    Message.warn("problem with typedef file: " + file.trim(), e);
                 }
             }
         } else {
@@ -257,12 +256,12 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         addLockStrategy("artifact-lock", new CreateFileLockStrategy(debugLocking()));
         addLockStrategy("artifact-lock-nio", new NIOFileLockStrategy(debugLocking()));
 
-        addConflictManager("latest-revision", new LatestConflictManager("latest-revision",
-                latestRevisionStrategy));
-        addConflictManager("latest-compatible", new LatestCompatibleConflictManager(
-                "latest-compatible", latestRevisionStrategy));
-        addConflictManager("latest-time", new LatestConflictManager("latest-time",
-                latestTimeStrategy));
+        addConflictManager("latest-revision",
+            new LatestConflictManager("latest-revision", latestRevisionStrategy));
+        addConflictManager("latest-compatible",
+            new LatestCompatibleConflictManager("latest-compatible", latestRevisionStrategy));
+        addConflictManager("latest-time",
+            new LatestConflictManager("latest-time", latestTimeStrategy));
         addConflictManager("all", new NoConflictManager());
         addConflictManager("strict", new StrictConflictManager());
 
@@ -281,7 +280,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         } catch (Exception e) {
             // ignore: the matcher isn't on the classpath
             Message.info("impossible to define glob matcher: "
-                    + "org.apache.ivy.plugins.matcher.GlobPatternMatcher was not found", e);
+                    + "org.apache.ivy.plugins.matcher.GlobPatternMatcher was not found",
+                e);
         }
 
         addReportOutputter(new LogReportOutputter());
@@ -303,8 +303,9 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         try {
             addAllVariables((Map<?, ?>) System.getProperties().clone());
         } catch (AccessControlException ex) {
-            Message.verbose("access denied to getting all system properties: they won't be available as Ivy variables."
-                    + "\nset " + ex.getPermission() + " permission if you want to access them");
+            Message.verbose(
+                "access denied to getting all system properties: they won't be available as Ivy variables."
+                        + "\nset " + ex.getPermission() + " permission if you want to access them");
         }
     }
 
@@ -367,7 +368,7 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
     }
 
     public synchronized void typeDefs(Properties p, boolean silentFail) {
-        for (Entry<Object, Object> entry : p.entrySet()) {
+        for (Map.Entry<Object, Object> entry : p.entrySet()) {
             String name = entry.getKey().toString();
             typeDef(name, entry.getValue().toString(), silentFail);
         }
@@ -512,8 +513,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
             setVariable("ivy.settings.dir.url", dirUrl);
             setDeprecatedVariable("ivy.conf.dir", "ivy.settings.dir");
         } else {
-            Message.warn("settings url does not contain any slash (/): "
-                    + "ivy.settings.dir variable not set");
+            Message.warn(
+                "settings url does not contain any slash (/): ivy.settings.dir variable not set");
         }
     }
 
@@ -632,7 +633,7 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
      */
     public synchronized Map<String, String> substitute(Map<String, String> strings) {
         Map<String, String> substituted = new LinkedHashMap<String, String>();
-        for (Entry<String, String> entry : strings.entrySet()) {
+        for (Map.Entry<String, String> entry : strings.entrySet()) {
             substituted.put(entry.getKey(), substitute(entry.getValue()));
         }
         return substituted;
@@ -665,13 +666,12 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
             return getClassLoader().loadClass(className);
         } catch (ClassNotFoundException e) {
             if (silentFail) {
-                Message.info("impossible to define new type: class not found: " + className
-                        + " in " + classpathURLs + " nor Ivy classloader");
+                Message.info("impossible to define new type: class not found: " + className + " in "
+                        + classpathURLs + " nor Ivy classloader");
                 return null;
-            } else {
-                throw new RuntimeException("impossible to define new type: class not found: "
-                        + className + " in " + classpathURLs + " nor Ivy classloader");
             }
+            throw new RuntimeException("impossible to define new type: class not found: "
+                    + className + " in " + classpathURLs + " nor Ivy classloader");
         }
     }
 
@@ -768,8 +768,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
 
     private void checkResolverName(String resolverName) {
         if (resolverName != null && !resolversMap.containsKey(resolverName)) {
-            throw new IllegalArgumentException("no resolver found called " + resolverName
-                    + ": check your settings");
+            throw new IllegalArgumentException(
+                    "no resolver found called " + resolverName + ": check your settings");
         }
     }
 
@@ -780,8 +780,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
             PatternMatcher matcher, String resolverName, String branch, String conflictManager,
             String resolveMode) {
         checkResolverName(resolverName);
-        moduleSettings.defineRule(new MapMatcher(attributes, matcher), new ModuleSettings(
-                resolverName, branch, conflictManager, resolveMode));
+        moduleSettings.defineRule(new MapMatcher(attributes, matcher),
+            new ModuleSettings(resolverName, branch, conflictManager, resolveMode));
     }
 
     /**
@@ -866,18 +866,16 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         String repositoryCacheRoot = getVariable("ivy.cache.repository");
         if (repositoryCacheRoot != null) {
             return Checks.checkAbsolute(repositoryCacheRoot, "ivy.cache.repository");
-        } else {
-            return getDefaultCache();
         }
+        return getDefaultCache();
     }
 
     public synchronized File getDefaultResolutionCacheBasedir() {
         String resolutionCacheRoot = getVariable("ivy.cache.resolution");
         if (resolutionCacheRoot != null) {
             return Checks.checkAbsolute(resolutionCacheRoot, "ivy.cache.resolution");
-        } else {
-            return getDefaultCache();
         }
+        return getDefaultCache();
     }
 
     public synchronized void setDictatorResolver(DependencyResolver resolver) {
@@ -889,7 +887,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
             return null;
         }
         if (workspaceResolver != null && !(dictatorResolver instanceof WorkspaceChainResolver)) {
-            dictatorResolver = new WorkspaceChainResolver(this, dictatorResolver, workspaceResolver);
+            dictatorResolver = new WorkspaceChainResolver(this, dictatorResolver,
+                    workspaceResolver);
         }
         return dictatorResolver;
     }
@@ -971,14 +970,13 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         });
         if (ms == null) {
             return getDefaultConflictManager();
-        } else {
-            ConflictManager cm = getConflictManager(ms.getConflictManager());
-            if (cm == null) {
-                throw new IllegalStateException("ivy badly configured: unknown conflict manager "
-                        + ms.getConflictManager());
-            }
-            return cm;
         }
+        ConflictManager cm = getConflictManager(ms.getConflictManager());
+        if (cm == null) {
+            throw new IllegalStateException(
+                    "ivy badly configured: unknown conflict manager " + ms.getConflictManager());
+        }
+        return cm;
     }
 
     public synchronized String getResolveMode(ModuleId moduleId) {
@@ -1098,8 +1096,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
     }
 
     public synchronized RepositoryCacheManager[] getRepositoryCacheManagers() {
-        return repositoryCacheManagers.values().toArray(
-            new RepositoryCacheManager[repositoryCacheManagers.size()]);
+        return repositoryCacheManagers.values()
+                .toArray(new RepositoryCacheManager[repositoryCacheManagers.size()]);
     }
 
     public synchronized void addConfigured(ReportOutputter outputter) {
@@ -1278,8 +1276,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
 
     public synchronized RepositoryCacheManager getDefaultRepositoryCacheManager() {
         if (defaultRepositoryCacheManager == null) {
-            defaultRepositoryCacheManager = new DefaultRepositoryCacheManager("default-cache",
-                    this, getDefaultRepositoryCacheBasedir());
+            defaultRepositoryCacheManager = new DefaultRepositoryCacheManager("default-cache", this,
+                    getDefaultRepositoryCacheBasedir());
             addRepositoryCacheManager(defaultRepositoryCacheManager);
         }
         return defaultRepositoryCacheManager;
@@ -1298,7 +1296,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
         return resolutionCacheManager;
     }
 
-    public synchronized void setResolutionCacheManager(ResolutionCacheManager resolutionCacheManager) {
+    public synchronized void setResolutionCacheManager(
+            ResolutionCacheManager resolutionCacheManager) {
         this.resolutionCacheManager = resolutionCacheManager;
     }
 
@@ -1341,8 +1340,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
     public synchronized boolean debugConflictResolution() {
         if (debugConflictResolution == null) {
             String var = getVariable("ivy.log.conflict.resolution");
-            debugConflictResolution = Boolean.valueOf(var != null
-                    && Boolean.valueOf(var).booleanValue());
+            debugConflictResolution = Boolean
+                    .valueOf(var != null && Boolean.valueOf(var).booleanValue());
         }
         return debugConflictResolution.booleanValue();
     }
@@ -1481,8 +1480,8 @@ public class IvySettings implements SortEngineSettings, PublishEngineSettings, P
     }
 
     public synchronized void useDeprecatedUseOrigin() {
-        Message.deprecated("useOrigin option is deprecated when calling resolve, use useOrigin"
-                + " setting on the cache implementation instead");
+        Message.deprecated(
+            "useOrigin option is deprecated when calling resolve, use useOrigin setting on the cache implementation instead");
         setDefaultUseOrigin(true);
 
     }

@@ -88,11 +88,11 @@ public class ModuleDescriptorSorter {
             return;
         }
         DependencyDescriptor[] descriptors = current.getDependencies();
-        Message.debug("Sort dependencies of : " + current.toString()
-                + " / Number of dependencies = " + descriptors.length);
+        Message.debug("Sort dependencies of : " + current + " / Number of dependencies = "
+                + descriptors.length);
         current.setCaller(caller);
-        for (int i = 0; i < descriptors.length; i++) {
-            ModuleInSort child = moduleDescriptors.getModuleDescriptorDependency(descriptors[i]);
+        for (DependencyDescriptor descriptor : descriptors) {
+            ModuleInSort child = moduleDescriptors.getModuleDescriptorDependency(descriptor);
             if (child != null) {
                 sortModuleDescriptorsHelp(child, current);
             }

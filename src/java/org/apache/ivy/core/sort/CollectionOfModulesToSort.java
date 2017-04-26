@@ -92,18 +92,17 @@ class CollectionOfModulesToSort implements Iterable<ModuleInSort> {
      *         returns null.
      */
     public ModuleInSort getModuleDescriptorDependency(DependencyDescriptor descriptor) {
-        Collection<ModuleInSort> modulesOfSameId = modulesByModuleId.get(descriptor
-                .getDependencyId());
+        Collection<ModuleInSort> modulesOfSameId = modulesByModuleId
+                .get(descriptor.getDependencyId());
         if (modulesOfSameId == null) {
             return null;
         }
         for (ModuleInSort mdInSort : modulesOfSameId) {
             if (mdInSort.match(descriptor, versionMatcher)) {
                 return mdInSort;
-            } else {
-                nonMatchingVersionReporter.reportNonMatchingVersion(descriptor,
-                    mdInSort.getSortedModuleDescriptor());
             }
+            nonMatchingVersionReporter.reportNonMatchingVersion(descriptor,
+                mdInSort.getSortedModuleDescriptor());
         }
         return null;
     }
